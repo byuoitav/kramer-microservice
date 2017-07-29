@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/byuoitav/kramer-microservice/helpers"
 	"github.com/fatih/color"
@@ -47,20 +48,23 @@ func GetCurrentInput(context echo.Context) error {
 func GetInputByPort(context echo.Context) error {
 	defer color.Unset()
 
-	//	address := context.Param("address")
-	//	port := context.Param("port")
-	//	bay, err := strconv.Atoi(port)
-	//	if err != nil || bay < 0 {
-	//		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
-	//	}
-	//
-	//	input, err := helpers.GetInputByOutputPort(address, bay)
-	//	if err != nil {
-	//		return context.JSON(http.StatusInternalServerError, err.Error())
-	//	}
-	//
-	//	return context.JSON(http.StatusOK, input)
-	return nil
+	address := context.Param("address")
+	port := context.Param("port")
+	portN, err := strconv.Atoi(port)
+	if err != nil || portN < 0 {
+		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
+	}
+
+	color.Set(color.FgYellow)
+	log.Printf("Getting input for output port %s", port)
+	input, err := helpers.GetCurrentInputByOutputPort(address, port)
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	color.Set(color.FgGreen)
+	log.Printf("Input for output port %s is %s", port, input)
+	return context.JSON(http.StatusOK, input)
 }
 
 func SetFrontLock(context echo.Context) error {
