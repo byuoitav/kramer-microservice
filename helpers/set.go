@@ -26,3 +26,22 @@ func SwitchInput(address string, input string, output string) error {
 	}
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
+
+func SetFrontLock(address string, state bool) error {
+	var num int8
+	if state {
+		num = 1
+	}
+
+	command := fmt.Sprintf("#LOCK-FP %v", num)
+
+	resp, err := SendCommand(address, command)
+	if err != nil {
+		return err
+	}
+
+	if strings.Contains(resp, "OK") {
+		return nil
+	}
+	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+}

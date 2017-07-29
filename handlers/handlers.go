@@ -69,10 +69,22 @@ func GetInputByPort(context echo.Context) error {
 
 func SetFrontLock(context echo.Context) error {
 	defer color.Unset()
-	return nil
-}
+	address := context.Param("address")
+	state := context.Param("bool")
+	stateB, err := strconv.ParseBool(state)
+	if err != nil {
+		return context.JSON(http.StatusBadRequest, "Error! front-button-lock must be set to true/false")
+	}
 
-func SetBlank(context echo.Context) error {
-	defer color.Unset()
-	return nil
+	color.Set(color.FgYellow)
+	log.Printf("Setting front button lock status to %v", stateB)
+
+	err = helpers.SetFrontLock(address, stateB)
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	color.Set(color.FgGreen)
+	log.Printf("Success")
+	return context.JSON(http.StatusOK, "Success")
 }

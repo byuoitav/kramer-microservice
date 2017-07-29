@@ -25,8 +25,7 @@ func main() {
 
 	//Functionality endpoints
 	secure.GET("/:address/input/:input/:output", handlers.SwitchInput)
-	secure.GET("/:address/front-button-lock/:bool", handlers.SetFrontLock)
-	secure.GET("/:address/blank/:bool/output/:output", handlers.SetBlank)
+	secure.GET("/:address/front-lock/:bool", handlers.SetFrontLock)
 
 	//Status endpoints
 	secure.GET("/:address/input/map", handlers.GetCurrentInput)
