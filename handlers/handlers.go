@@ -18,7 +18,6 @@ func SwitchInput(context echo.Context) error {
 	log.Printf("Routing %v to %v on %v", input, output, address)
 
 	err := helpers.SwitchInput(address, input, output)
-
 	if err != nil {
 		log.Printf("There was a problem: %v", err.Error())
 		return context.JSON(http.StatusInternalServerError, err.Error())

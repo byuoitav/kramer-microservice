@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	port := ":8011"
+	port := ":8012"
 	router := echo.New()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
@@ -25,8 +25,8 @@ func main() {
 
 	//Functionality endpoints
 	secure.GET("/:address/input/:input/:output", handlers.SwitchInput)
-	secure.GET("/:address/buttonlock/:bool", handlers.SetFrontLock)
-	secure.GET("/:address/output/:output/blank/:bool", handlers.SetBlank)
+	secure.GET("/:address/front-button-lock/:bool", handlers.SetFrontLock)
+	secure.GET("/:address/blank/:bool/output/:output", handlers.SetBlank)
 
 	//Status endpoints
 	secure.GET("/:address/input/map", handlers.GetCurrentInput)
