@@ -45,7 +45,7 @@ func SendCommand(address string, command string) (string, error) {
 	return string(resp), nil
 }
 
-func AdjustNumberFromString(numString string) (int, error) {
+func ToBaseOne(numString string) (int, error) {
 	num, err := strconv.Atoi(numString)
 	if err != nil {
 		return -1, err
@@ -55,6 +55,17 @@ func AdjustNumberFromString(numString string) (int, error) {
 	// we are going to use 0 based indexing on video matrixing,
 	// and the kramer uses 1-based indexing.
 	num++
+
+	return num, nil
+}
+
+func ToBaseZero(numString string) (int, error) {
+	num, err := strconv.Atoi(numString)
+	if err != nil {
+		return -1, err
+	}
+
+	num--
 
 	return num, nil
 }

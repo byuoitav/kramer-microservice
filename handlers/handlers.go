@@ -17,12 +17,12 @@ func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 	address := context.Param("address")
 
-	inputN, err := helpers.AdjustNumberFromString(input)
+	inputN, err := helpers.ToBaseOne(input)
 	if err != nil || inputN < 0 {
 		return context.JSON(http.StatusBadRequest, "Error! Input parameter must be zero or greater")
 	}
 
-	outputN, err := helpers.AdjustNumberFromString(output)
+	outputN, err := helpers.ToBaseOne(output)
 	if err != nil || outputN < 0 {
 		return context.JSON(http.StatusBadRequest, "Error! Output parameter must be zero or greater")
 	}
@@ -48,7 +48,7 @@ func GetInputByPort(context echo.Context) error {
 
 	address := context.Param("address")
 	port := context.Param("port")
-	portN, err := helpers.AdjustNumberFromString(port)
+	portN, err := helpers.ToBaseOne(port)
 	if err != nil || portN < 0 {
 		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
 	}
@@ -61,6 +61,14 @@ func GetInputByPort(context echo.Context) error {
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	color.Set(color.FgYellow)
+	log.Printf("Changing to base-0 indexing... (-1 to each port number)")
+	tmp, err := helpers.ToBaseZero(input.Input)
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+	input.Input = strconv.Itoa(tmp)
 
 	color.Set(color.FgGreen)
 	log.Printf("Input for output port %s is %v", port, input.Input)
