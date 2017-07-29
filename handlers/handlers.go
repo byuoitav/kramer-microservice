@@ -32,19 +32,6 @@ func SwitchInput(context echo.Context) error {
 	return context.JSON(http.StatusOK, "Success")
 }
 
-func GetCurrentInput(context echo.Context) error {
-	defer color.Unset()
-
-	//	address := context.Param("address")
-	//	inputs, err := helpers.GetCurrentInputs(address)
-	//	if err != nil {
-	//		return context.JSON(http.StatusInternalServerError, err.Error())
-	//	}
-
-	//	return context.JSON(http.StatusOK, inputs)
-	return nil
-}
-
 func GetInputByPort(context echo.Context) error {
 	defer color.Unset()
 

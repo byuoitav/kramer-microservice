@@ -15,15 +15,14 @@ const CARRIAGE_RETURN = 0x0D
 const LINE_FEED = 0x0A
 const SPACE = 0x20
 
-// takes a command and sends it to the device
-// should it also return what the response of the query was?
+// takes a command and sends it to the device, and returns the devices response to that command
 func SendCommand(address string, command string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgCyan)
 
 	// open telnet connection with address
 	log.Printf("Opening telnet connection with %s", address)
-	conn, err := GetConnection(address)
+	conn, err := getConnection(address)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +44,7 @@ func SendCommand(address string, command string) (string, error) {
 	return string(resp), nil
 }
 
-func GetConnection(address string) (*net.TCPConn, error) {
+func getConnection(address string) (*net.TCPConn, error) {
 	addr, err := net.ResolveTCPAddr("tcp", address+":5000")
 	if err != nil {
 		return nil, err
