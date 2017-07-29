@@ -17,10 +17,21 @@ func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 	address := context.Param("address")
 
+	inputN, err := helpers.AdjustNumberFromString(input)
+	if err != nil || inputN < 0 {
+		return context.JSON(http.StatusBadRequest, "Error! Input parameter must be zero or greater")
+	}
+
+	outputN, err := helpers.AdjustNumberFromString(output)
+	if err != nil || outputN < 0 {
+		return context.JSON(http.StatusBadRequest, "Error! Output parameter must be zero or greater")
+	}
+
 	color.Set(color.FgYellow)
 	log.Printf("Routing %v to %v on %v", input, output, address)
+	log.Printf("Changing to base-1 indexing... (+1 to each port number)")
 
-	err := helpers.SwitchInput(address, input, output)
+	err = helpers.SwitchInput(address, inputN, outputN)
 	if err != nil {
 		color.Set(color.FgRed)
 		log.Printf("There was a problem: %v", err.Error())
@@ -37,20 +48,22 @@ func GetInputByPort(context echo.Context) error {
 
 	address := context.Param("address")
 	port := context.Param("port")
-	portN, err := strconv.Atoi(port)
+	portN, err := helpers.AdjustNumberFromString(port)
 	if err != nil || portN < 0 {
 		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Getting input for output port %s", port)
-	input, err := helpers.GetCurrentInputByOutputPort(address, port)
+	log.Printf("Getting input for output port %v", portN)
+	log.Printf("Changing to base-1 indexing... (+1 to each port number)")
+
+	input, err := helpers.GetCurrentInputByOutputPort(address, portN)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	color.Set(color.FgGreen)
-	log.Printf("Input for output port %s is %s", port, input)
+	log.Printf("Input for output port %s is %v", port, input.Input)
 	return context.JSON(http.StatusOK, input)
 }
 

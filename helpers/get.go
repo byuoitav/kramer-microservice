@@ -6,11 +6,15 @@ import (
 	"strings"
 )
 
-func GetCurrentInputByOutputPort(address string, port string) (string, error) {
-	command := fmt.Sprintf("#VID? %s", port)
+type Input struct {
+	Input string `json:"input"`
+}
+
+func GetCurrentInputByOutputPort(address string, port int) (Input, error) {
+	command := fmt.Sprintf("#VID? %v", port)
 	resp, err := SendCommand(address, command)
 	if err != nil {
-		return "", err
+		return Input{}, err
 	}
 
 	if strings.Contains(resp, "VID") {
@@ -19,7 +23,9 @@ func GetCurrentInputByOutputPort(address string, port string) (string, error) {
 
 		parts = strings.Split(resp, ">")
 
-		return parts[0], nil
+		var i Input
+		i.Input = parts[0]
+		return i, nil
 	}
-	return "", errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	return Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }

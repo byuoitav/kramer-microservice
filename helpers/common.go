@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/fatih/color"
@@ -42,6 +43,20 @@ func SendCommand(address string, command string) (string, error) {
 	log.Printf("Response from device: %s", resp)
 
 	return string(resp), nil
+}
+
+func AdjustNumberFromString(numString string) (int, error) {
+	num, err := strconv.Atoi(numString)
+	if err != nil {
+		return -1, err
+	}
+
+	// add one to make it match pulse eight.
+	// we are going to use 0 based indexing on video matrixing,
+	// and the kramer uses 1-based indexing.
+	num++
+
+	return num, nil
 }
 
 func getConnection(address string) (*net.TCPConn, error) {
