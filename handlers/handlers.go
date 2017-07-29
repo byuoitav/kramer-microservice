@@ -5,29 +5,34 @@ import (
 	"net/http"
 
 	"github.com/byuoitav/kramer-microservice/helpers"
+	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
 
 func SwitchInput(context echo.Context) error {
-	log.Printf("Changing inputs")
+	defer color.Unset()
 
 	input := context.Param("input")
 	output := context.Param("output")
 	address := context.Param("address")
 
+	color.Set(color.FgYellow)
 	log.Printf("Routing %v to %v on %v", input, output, address)
 
 	err := helpers.SwitchInput(address, input, output)
 	if err != nil {
+		color.Set(color.FgRed)
 		log.Printf("There was a problem: %v", err.Error())
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
+	color.Set(color.FgGreen)
 	log.Printf("Success")
 	return context.JSON(http.StatusOK, "Success")
 }
 
 func GetCurrentInput(context echo.Context) error {
+	defer color.Unset()
 
 	//	address := context.Param("address")
 	//	inputs, err := helpers.GetCurrentInputs(address)
@@ -40,6 +45,7 @@ func GetCurrentInput(context echo.Context) error {
 }
 
 func GetInputByPort(context echo.Context) error {
+	defer color.Unset()
 
 	//	address := context.Param("address")
 	//	port := context.Param("port")
@@ -58,9 +64,11 @@ func GetInputByPort(context echo.Context) error {
 }
 
 func SetFrontLock(context echo.Context) error {
+	defer color.Unset()
 	return nil
 }
 
 func SetBlank(context echo.Context) error {
+	defer color.Unset()
 	return nil
 }
