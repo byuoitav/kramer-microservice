@@ -30,7 +30,6 @@ func main() {
 	secure.GET("/:address/front-lock/:bool", handlers.SetFrontLock)
 
 	//Status endpoints
-	//	secure.GET("/:address/input/map", handlers.GetCurrentInput)
 	secure.GET("/:address/input/get/:port", handlers.GetInputByPort)
 
 	server := http.Server{
@@ -38,22 +37,32 @@ func main() {
 		MaxHeaderBytes: 1024 * 10,
 	}
 
+	header()
+	router.StartServer(&server)
+}
+
+func header() {
+	defer color.Unset()
+
 	color.Set(color.FgHiYellow)
 	fmt.Printf("\t\tKramer Microservice\n")
 	fmt.Printf("Endpoints:\n")
+
 	color.Set(color.FgBlue)
 	fmt.Printf("\t/:address/input/:input/:output\n")
+
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tChange the current input for a given output\n")
+
 	color.Set(color.FgBlue)
 	fmt.Printf("\t/:address/front-lock/:bool\n")
+
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tChange the front-button-lock status (true/false)\n")
+
 	color.Set(color.FgBlue)
 	fmt.Printf("\t/:address/input/get/:port\n")
+
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet the current input for a given output port\n")
-	color.Unset()
-
-	router.StartServer(&server)
 }

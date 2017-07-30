@@ -62,6 +62,7 @@ func ToIndexOne(numString string) (string, error) {
 	return strconv.Itoa(num), nil
 }
 
+// Returns if a given number (in a string) is less than zero.
 func LessThanZero(numString string) bool {
 	defer color.Unset()
 	num, err := strconv.Atoi(numString)

@@ -19,12 +19,12 @@ func SwitchInput(context echo.Context) error {
 	address := context.Param("address")
 
 	i, err := helpers.ToIndexOne(input)
-	if err != nil || helpers.LessThanZero(i) {
+	if err != nil || helpers.LessThanZero(input) {
 		return context.JSON(http.StatusBadRequest, fmt.Sprintf("Error! Input parameter %s is not valid!", input))
 	}
 
 	o, err := helpers.ToIndexOne(output)
-	if err != nil || helpers.LessThanZero(o) {
+	if err != nil || helpers.LessThanZero(output) {
 		return context.JSON(http.StatusBadRequest, "Error! Output parameter must be zero or greater")
 	}
 
@@ -50,7 +50,7 @@ func GetInputByPort(context echo.Context) error {
 	address := context.Param("address")
 	port := context.Param("port")
 	p, err := helpers.ToIndexOne(port)
-	if err != nil || helpers.LessThanZero(p) {
+	if err != nil || helpers.LessThanZero(port) {
 		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
 	}
 
