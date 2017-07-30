@@ -10,8 +10,8 @@ type Input struct {
 	Input string `json:"input"`
 }
 
-func GetCurrentInputByOutputPort(address string, port int) (Input, error) {
-	command := fmt.Sprintf("#VID? %v", port)
+func GetCurrentInputByOutputPort(address string, port string) (Input, error) {
+	command := fmt.Sprintf("#VID? %s", port)
 	resp, err := SendCommand(address, command)
 	if err != nil {
 		return Input{}, err

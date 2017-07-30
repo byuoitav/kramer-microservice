@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,21 +18,21 @@ func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 	address := context.Param("address")
 
-	inputN, err := helpers.ToBaseOne(input)
-	if err != nil || inputN < 0 {
-		return context.JSON(http.StatusBadRequest, "Error! Input parameter must be zero or greater")
+	i, err := helpers.ToIndexOne(input)
+	if err != nil || helpers.LessThanZero(i) {
+		return context.JSON(http.StatusBadRequest, fmt.Sprintf("Error! Input parameter %s is not valid!", input))
 	}
 
-	outputN, err := helpers.ToBaseOne(output)
-	if err != nil || outputN < 0 {
+	o, err := helpers.ToIndexOne(output)
+	if err != nil || helpers.LessThanZero(o) {
 		return context.JSON(http.StatusBadRequest, "Error! Output parameter must be zero or greater")
 	}
 
 	color.Set(color.FgYellow)
 	log.Printf("Routing %v to %v on %v", input, output, address)
-	log.Printf("Changing to base-1 indexing... (+1 to each port number)")
+	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
 
-	err = helpers.SwitchInput(address, inputN, outputN)
+	err = helpers.SwitchInput(address, i, o)
 	if err != nil {
 		color.Set(color.FgRed)
 		log.Printf("There was a problem: %v", err.Error())
@@ -48,27 +49,26 @@ func GetInputByPort(context echo.Context) error {
 
 	address := context.Param("address")
 	port := context.Param("port")
-	portN, err := helpers.ToBaseOne(port)
-	if err != nil || portN < 0 {
+	p, err := helpers.ToIndexOne(port)
+	if err != nil || helpers.LessThanZero(p) {
 		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Getting input for output port %v", portN)
-	log.Printf("Changing to base-1 indexing... (+1 to each port number)")
+	log.Printf("Getting input for output port %s", port)
+	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
 
-	input, err := helpers.GetCurrentInputByOutputPort(address, portN)
+	input, err := helpers.GetCurrentInputByOutputPort(address, p)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Changing to base-0 indexing... (-1 to each port number)")
-	tmp, err := helpers.ToBaseZero(input.Input)
+	log.Printf("Changing to 0-based indexing... (-1 to each port number)")
+	input.Input, err = helpers.ToIndexZero(input.Input)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
-	input.Input = strconv.Itoa(tmp)
 
 	color.Set(color.FgGreen)
 	log.Printf("Input for output port %s is %v", port, input.Input)

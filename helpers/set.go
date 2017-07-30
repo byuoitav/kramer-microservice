@@ -3,12 +3,11 @@ package helpers
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
-func SwitchInput(address string, input int, output int) error {
-	command := fmt.Sprintf("#VID %v>%v", input, output)
+func SwitchInput(address string, input string, output string) error {
+	command := fmt.Sprintf("#VID %s>%s", input, output)
 
 	resp, err := SendCommand(address, command)
 	if err != nil {
@@ -21,16 +20,7 @@ func SwitchInput(address string, input int, output int) error {
 
 		parts = strings.Split(resp, ">")
 
-		i, err := strconv.Atoi(parts[0])
-		if err != nil {
-			return err
-		}
-		o, err := strconv.Atoi(parts[1])
-		if err != nil {
-			return err
-		}
-
-		if i == input && o == output {
+		if parts[0] == input && parts[1] == output {
 			return nil
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -16,8 +17,8 @@ const CARRIAGE_RETURN = 0x0D
 const LINE_FEED = 0x0A
 const SPACE = 0x20
 
-// takes a command and sends it to the device, and returns the devices response to that command
-func SendCommand(address string, command string) (string, error) {
+// Takes a command and sends it to the address, and returns the devices response to that command
+func SendCommand(address, command string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgCyan)
 
@@ -33,6 +34,7 @@ func SendCommand(address string, command string) (string, error) {
 	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
 
 	// write command
+	command = strings.Replace(command, " ", string(SPACE), -1)
 	log.Printf("Sending command %s", command)
 	command += string(CARRIAGE_RETURN) + string(LINE_FEED)
 	conn.Write([]byte(command))
@@ -45,10 +47,11 @@ func SendCommand(address string, command string) (string, error) {
 	return string(resp), nil
 }
 
-func ToBaseOne(numString string) (int, error) {
+// This function converts a number (in a string) to index-based 1.
+func ToIndexOne(numString string) (string, error) {
 	num, err := strconv.Atoi(numString)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
 	// add one to make it match pulse eight.
@@ -56,18 +59,31 @@ func ToBaseOne(numString string) (int, error) {
 	// and the kramer uses 1-based indexing.
 	num++
 
-	return num, nil
+	return strconv.Itoa(num), nil
 }
 
-func ToBaseZero(numString string) (int, error) {
+func LessThanZero(numString string) bool {
+	defer color.Unset()
 	num, err := strconv.Atoi(numString)
 	if err != nil {
-		return -1, err
+		color.Set(color.FgRed)
+		log.Printf("Error converting %s to a number: %s", numString, err.Error())
+		return false
+	}
+
+	return num < 0
+}
+
+// This function converts a number (in a string) to index-base 0.
+func ToIndexZero(numString string) (string, error) {
+	num, err := strconv.Atoi(numString)
+	if err != nil {
+		return "", err
 	}
 
 	num--
 
-	return num, nil
+	return strconv.Itoa(num), nil
 }
 
 func getConnection(address string) (*net.TCPConn, error) {
