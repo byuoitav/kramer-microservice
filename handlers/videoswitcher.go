@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/byuoitav/kramer-microservice/helpers"
+	vs "github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
@@ -18,13 +18,13 @@ func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 	address := context.Param("address")
 
-	i, err := helpers.ToIndexOne(input)
-	if err != nil || helpers.LessThanZero(input) {
+	i, err := vs.ToIndexOne(input)
+	if err != nil || vs.LessThanZero(input) {
 		return context.JSON(http.StatusBadRequest, fmt.Sprintf("Error! Input parameter %s is not valid!", input))
 	}
 
-	o, err := helpers.ToIndexOne(output)
-	if err != nil || helpers.LessThanZero(output) {
+	o, err := vs.ToIndexOne(output)
+	if err != nil || vs.LessThanZero(output) {
 		return context.JSON(http.StatusBadRequest, "Error! Output parameter must be zero or greater")
 	}
 
@@ -32,7 +32,7 @@ func SwitchInput(context echo.Context) error {
 	log.Printf("Routing %v to %v on %v", input, output, address)
 	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
 
-	err = helpers.SwitchInput(address, i, o)
+	err = vs.SwitchInput(address, i, o)
 	if err != nil {
 		color.Set(color.FgRed)
 		log.Printf("There was a problem: %v", err.Error())
@@ -49,8 +49,8 @@ func GetInputByPort(context echo.Context) error {
 
 	address := context.Param("address")
 	port := context.Param("port")
-	p, err := helpers.ToIndexOne(port)
-	if err != nil || helpers.LessThanZero(port) {
+	p, err := vs.ToIndexOne(port)
+	if err != nil || vs.LessThanZero(port) {
 		return context.JSON(http.StatusBadRequest, "Error! Port parameter must be zero or greater")
 	}
 
@@ -58,14 +58,14 @@ func GetInputByPort(context echo.Context) error {
 	log.Printf("Getting input for output port %s", port)
 	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
 
-	input, err := helpers.GetCurrentInputByOutputPort(address, p)
+	input, err := vs.GetCurrentInputByOutputPort(address, p)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	color.Set(color.FgYellow)
 	log.Printf("Changing to 0-based indexing... (-1 to each port number)")
-	input.Input, err = helpers.ToIndexZero(input.Input)
+	input.Input, err = vs.ToIndexZero(input.Input)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -87,7 +87,7 @@ func SetFrontLock(context echo.Context) error {
 	color.Set(color.FgYellow)
 	log.Printf("Setting front button lock status to %v", stateB)
 
-	err = helpers.SetFrontLock(address, stateB)
+	err = vs.SetFrontLock(address, stateB)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}

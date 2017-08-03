@@ -25,28 +25,31 @@ func main() {
 	router.GET("/", echo.WrapHandler(http.HandlerFunc(hateoas.RootResponse)))
 	router.GET("/health", echo.WrapHandler(http.HandlerFunc(health.Check)))
 
-	//Functionality endpoints
+	// videoswitcher endpoints
 	secure.GET("/:address/input/:input/:output", handlers.SwitchInput)
 	secure.GET("/:address/front-lock/:bool", handlers.SetFrontLock)
-
-	//Status endpoints
 	secure.GET("/:address/input/get/:port", handlers.GetInputByPort)
+
+	// via endpoints
+	secure.GET("/via/:address/restart", handlers.RestartVIA)
 
 	server := http.Server{
 		Addr:           port,
 		MaxHeaderBytes: 1024 * 10,
 	}
 
-	header()
+	printHeader()
 	router.StartServer(&server)
 }
 
-func header() {
+func printHeader() {
 	defer color.Unset()
 
 	color.Set(color.FgHiYellow)
 	fmt.Printf("\t\tKramer Microservice\n")
-	fmt.Printf("Endpoints:\n")
+
+	// Videoswitcher
+	fmt.Printf("Videoswitcher Endpoints:\n")
 
 	color.Set(color.FgBlue)
 	fmt.Printf("\t/:address/input/:input/:output\n")
@@ -65,4 +68,15 @@ func header() {
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet the current input for a given output port\n")
+
+	// VIA
+	color.Set(color.FgHiYellow)
+	fmt.Printf("VIA Endpoints:\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/restart\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tRestart the VIA\n")
+
 }
