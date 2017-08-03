@@ -31,7 +31,8 @@ func main() {
 	secure.GET("/:address/input/get/:port", handlers.GetInputByPort)
 
 	// via endpoints
-	secure.GET("/via/:address/restart", handlers.RestartVIA)
+	secure.GET("/via/:address/reset", handlers.ResetVia)
+	secure.GET("/via/:address/reboot", handlers.RebootVia)
 
 	server := http.Server{
 		Addr:           port,
@@ -74,9 +75,14 @@ func printHeader() {
 	fmt.Printf("VIA Endpoints:\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/via/:address/restart\n")
+	fmt.Printf("\t/via/:address/reboot\n")
 
 	color.Set(color.FgHiCyan)
-	fmt.Printf("\t\tRestart the VIA\n")
+	fmt.Printf("\t\tReboot a VIA\n")
 
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/reset\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tReset a VIA\n")
 }

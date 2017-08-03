@@ -102,7 +102,6 @@ func getConnection(address string) (*net.TCPConn, error) {
 }
 
 func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte, error) {
-
 	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
 
 	buffer := make([]byte, 128)
