@@ -18,6 +18,7 @@ func main() {
 	router := echo.New()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
+	router.Use(CORS())
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
@@ -41,6 +42,15 @@ func main() {
 
 	printHeader()
 	router.StartServer(&server)
+}
+
+func CORS() echo.MiddlewareFunc {
+	return func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+			return h(c)
+		}
+	}
 }
 
 func printHeader() {
