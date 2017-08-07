@@ -34,6 +34,7 @@ func main() {
 	// via endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
+	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 
 	server := http.Server{
 		Addr:           port,
@@ -95,4 +96,10 @@ func printHeader() {
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tReset a VIA\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/connected\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet connected status of a via\n")
 }
