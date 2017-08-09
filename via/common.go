@@ -44,8 +44,10 @@ func SendCommand(command ViaCommand, addr string) (string, error) {
 	login(conn)
 
 	// write command
-	command.addAuth(false)
-	command.writeCommand(conn)
+	if len(command.Command) > 0 {
+		command.addAuth(false)
+		command.writeCommand(conn)
+	}
 
 	// get response
 	resp, err := readUntil('\n', conn, 5)
@@ -116,6 +118,12 @@ func getConnection(address string) (*net.TCPConn, error) {
 		log.Printf(err.Error())
 		return nil, err
 	}
+
+	/*
+		Timeout?
+		d := &net.Dialer{Timeout: 5 * time.Second}
+		conn, err := d.Dial("tcp", radder.String())
+	*/
 
 	conn, err := net.DialTCP("tcp", nil, radder)
 	if err != nil {
