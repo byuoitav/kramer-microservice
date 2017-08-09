@@ -18,6 +18,7 @@ func main() {
 	router := echo.New()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
+	router.Use(CORS())
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
@@ -33,6 +34,7 @@ func main() {
 	// via endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
+	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 
 	server := http.Server{
 		Addr:           port,
@@ -41,6 +43,15 @@ func main() {
 
 	printHeader()
 	router.StartServer(&server)
+}
+
+func CORS() echo.MiddlewareFunc {
+	return func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+			return h(c)
+		}
+	}
 }
 
 func printHeader() {
@@ -85,4 +96,10 @@ func printHeader() {
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tReset a VIA\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/connected\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet connected status of a via\n")
 }
