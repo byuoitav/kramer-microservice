@@ -31,7 +31,7 @@ func SendCommand(address, command string) (string, error) {
 	defer conn.Close()
 
 	// read the welcom message
-	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
+	//	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
 
 	// write command
 	command = strings.Replace(command, " ", string(SPACE), -1)

@@ -5,10 +5,8 @@ import (
 	"net/http"
 
 	"github.com/byuoitav/authmiddleware"
-	"github.com/byuoitav/hateoas"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/fatih/color"
-	"github.com/jessemillar/health"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -22,9 +20,6 @@ func main() {
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
-
-	router.GET("/", echo.WrapHandler(http.HandlerFunc(hateoas.RootResponse)))
-	router.GET("/health", echo.WrapHandler(http.HandlerFunc(health.Check)))
 
 	// videoswitcher endpoints
 	secure.GET("/:address/input/:input/:output", handlers.SwitchInput)
