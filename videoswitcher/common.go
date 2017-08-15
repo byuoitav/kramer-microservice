@@ -1,7 +1,6 @@
 package videoswitcher
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -30,7 +29,7 @@ func SendCommand(address, command string) (string, error) {
 	}
 	defer conn.Close()
 
-	// read the welcom message
+	// read the welcome message
 	//	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
 
 	// write command
@@ -117,7 +116,20 @@ func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte,
 
 		message = append(message, buffer...)
 	}
-	return bytes.Trim(message, "\x00"), nil
+
+	return removeNil(message), nil
+}
+
+func removeNil(b []byte) (ret []byte) {
+	for _, c := range b {
+		switch c {
+		case '\x00':
+			break
+		default:
+			ret = append(ret, c)
+		}
+	}
+	return ret
 }
 
 func charInBuffer(toCheck byte, buffer []byte) bool {
@@ -128,4 +140,10 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 	}
 
 	return false
+}
+
+func logError(e string) {
+	color.Set(color.FgRed)
+	log.Printf("%s", e)
+	color.Unset()
 }

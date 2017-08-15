@@ -11,6 +11,7 @@ func SwitchInput(address string, input string, output string) error {
 
 	resp, err := SendCommand(address, command)
 	if err != nil {
+		logError(err.Error())
 		return err
 	}
 
@@ -24,6 +25,8 @@ func SwitchInput(address string, input string, output string) error {
 			return nil
 		}
 	}
+
+	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
 
@@ -37,11 +40,14 @@ func SetFrontLock(address string, state bool) error {
 
 	resp, err := SendCommand(address, command)
 	if err != nil {
+		logError(err.Error())
 		return err
 	}
 
 	if strings.Contains(resp, "OK") {
 		return nil
 	}
+
+	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }

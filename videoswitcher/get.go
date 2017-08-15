@@ -14,6 +14,7 @@ func GetCurrentInputByOutputPort(address string, port string) (Input, error) {
 	command := fmt.Sprintf("#VID? %s", port)
 	resp, err := SendCommand(address, command)
 	if err != nil {
+		logError(err.Error())
 		return Input{}, err
 	}
 
@@ -27,5 +28,7 @@ func GetCurrentInputByOutputPort(address string, port string) (Input, error) {
 		i.Input = parts[0]
 		return i, nil
 	}
+
+	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 	return Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
