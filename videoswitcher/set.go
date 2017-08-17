@@ -4,15 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/byuoitav/av-api/statusevaluators"
 )
 
-func SwitchInput(address, input, output string, readWelcome bool) error {
+func SwitchInput(address, input, output string, readWelcome bool) (statusevaluators.Input, error) {
 	command := fmt.Sprintf("#VID %s>%s", input, output)
 
 	resp, err := SendCommand(address, command, readWelcome)
 	if err != nil {
 		logError(err.Error())
-		return err
+		return statusevaluators.Input{}, err
 	}
 
 	if strings.Contains(resp, "VID") {
@@ -22,12 +24,14 @@ func SwitchInput(address, input, output string, readWelcome bool) error {
 		parts = strings.Split(resp, ">")
 
 		if parts[0] == input && parts[1] == output {
-			return nil
+			var i statusevaluators.Input
+			i.Input = input
+			return i, err
 		}
 	}
 
 	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
-	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
 
 func SetFrontLock(address string, state, readWelcome bool) error {

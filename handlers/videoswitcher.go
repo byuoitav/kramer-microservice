@@ -36,16 +36,23 @@ func SwitchInput(context echo.Context) error {
 	log.Printf("Routing %v to %v on %v", input, output, address)
 	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
 
-	err = vs.SwitchInput(address, i, o, readWelcome)
+	ret, err := vs.SwitchInput(address, i, o, readWelcome)
 	if err != nil {
 		color.Set(color.FgRed)
 		log.Printf("There was a problem: %v", err.Error())
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
+	color.Set(color.FgYellow)
+	log.Printf("Changing to 0-based indexing... (-1 to each port number)")
+	ret.Input, err = vs.ToIndexZero(ret.Input)
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
 	color.Set(color.FgGreen, color.Bold)
 	log.Printf("Success")
-	return context.JSON(http.StatusOK, "Success")
+	return context.JSON(http.StatusOK, ret)
 }
 
 func GetInputByPort(context echo.Context) error {
