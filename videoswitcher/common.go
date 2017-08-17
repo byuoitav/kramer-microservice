@@ -18,13 +18,13 @@ const CARRIAGE_RETURN = 0x0D
 const LINE_FEED = 0x0A
 const SPACE = 0x20
 
-var queue = make(map[string]int)
+var queue = make(map[string]uint64)
 var exec = syncmap.Map{}
 
 // Takes a command and sends it to the address, and returns the devices response to that command
 func SendCommand(address, command string, readWelcome bool) (string, error) {
 	defer color.Unset()
-	var commandNum int
+	var commandNum uint64
 
 	if !readWelcome {
 		commandNum = queue[address]
@@ -95,7 +95,7 @@ func SendCommand(address, command string, readWelcome bool) (string, error) {
 	return string(resp), nil
 }
 
-func waitForTurn(address string, commandNum int) {
+func waitForTurn(address string, commandNum uint64) {
 	execNum, _ := exec.Load(address)
 	for commandNum != execNum {
 		execNum, _ = exec.Load(address)
@@ -103,7 +103,7 @@ func waitForTurn(address string, commandNum int) {
 	return
 }
 
-func endExec(address string, commandNum int, readWelcome bool) {
+func endExec(address string, commandNum uint64, readWelcome bool) {
 	if !readWelcome {
 		// it takes a few extra milliseconds to allow new connections after
 		// the last one has been closed. this waits for that before allowing
@@ -112,7 +112,7 @@ func endExec(address string, commandNum int, readWelcome bool) {
 
 		// get execNum and increment it
 		execNum, _ := exec.Load(address)
-		num := execNum.(int)
+		num := execNum.(uint64)
 		num++
 
 		exec.Store(address, num)
