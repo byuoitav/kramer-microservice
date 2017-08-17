@@ -43,7 +43,7 @@ func SwitchInput(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	color.Set(color.FgGreen)
+	color.Set(color.FgGreen, color.Bold)
 	log.Printf("Success")
 	return context.JSON(http.StatusOK, "Success")
 }
@@ -79,7 +79,7 @@ func GetInputByPort(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	color.Set(color.FgGreen)
+	color.Set(color.FgGreen, color.Bold)
 	log.Printf("Input for output port %s is %v", port, input.Input)
 	return context.JSON(http.StatusOK, input)
 }
@@ -104,7 +104,7 @@ func SetFrontLock(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	color.Set(color.FgGreen)
+	color.Set(color.FgGreen, color.Bold)
 	log.Printf("Success")
 	return context.JSON(http.StatusOK, "Success")
 }
