@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-func SwitchInput(address string, input string, output string) error {
+func SwitchInput(address, input, output string, readWelcome bool) error {
 	command := fmt.Sprintf("#VID %s>%s", input, output)
 
-	resp, err := SendCommand(address, command)
+	resp, err := SendCommand(address, command, readWelcome)
 	if err != nil {
 		logError(err.Error())
 		return err
@@ -30,7 +30,7 @@ func SwitchInput(address string, input string, output string) error {
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
 
-func SetFrontLock(address string, state bool) error {
+func SetFrontLock(address string, state, readWelcome bool) error {
 	var num int8
 	if state {
 		num = 1
@@ -38,7 +38,7 @@ func SetFrontLock(address string, state bool) error {
 
 	command := fmt.Sprintf("#LOCK-FP %v", num)
 
-	resp, err := SendCommand(address, command)
+	resp, err := SendCommand(address, command, readWelcome)
 	if err != nil {
 		logError(err.Error())
 		return err

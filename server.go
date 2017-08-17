@@ -21,9 +21,9 @@ func main() {
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	// videoswitcher endpoints
-	secure.GET("/:address/input/:input/:output", handlers.SwitchInput)
-	secure.GET("/:address/front-lock/:bool", handlers.SetFrontLock)
-	secure.GET("/:address/input/get/:port", handlers.GetInputByPort)
+	secure.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
+	secure.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
+	secure.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
 
 	// via endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
@@ -49,19 +49,19 @@ func printHeader() {
 	fmt.Printf("Videoswitcher Endpoints:\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/:address/input/:input/:output\n")
+	fmt.Printf("\t/:address/welcome/:bool/input/:input/:output\n")
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tChange the current input for a given output\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/:address/front-lock/:bool\n")
+	fmt.Printf("\t/:address/welcome/:bool/front-lock/:bool2\n")
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tChange the front-button-lock status (true/false)\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/:address/input/get/:port\n")
+	fmt.Printf("\t/:address/welcome/:bool/input/get/:port\n")
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet the current input for a given output port\n")

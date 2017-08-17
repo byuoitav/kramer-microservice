@@ -17,7 +17,7 @@ const LINE_FEED = 0x0A
 const SPACE = 0x20
 
 // Takes a command and sends it to the address, and returns the devices response to that command
-func SendCommand(address, command string) (string, error) {
+func SendCommand(address, command string, readWelcome bool) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgCyan)
 
@@ -30,7 +30,15 @@ func SendCommand(address, command string) (string, error) {
 	defer conn.Close()
 
 	// read the welcome message
-	//	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
+	if readWelcome {
+		color.Set(color.FgHiCyan)
+		log.Printf("Reading welcome message")
+		color.Unset()
+		_, err := readUntil(CARRIAGE_RETURN, conn, 3)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	// write command
 	command = strings.Replace(command, " ", string(SPACE), -1)
@@ -40,6 +48,9 @@ func SendCommand(address, command string) (string, error) {
 
 	// get response
 	resp, err := readUntil(LINE_FEED, conn, 5)
+	if err != nil {
+		return "", err
+	}
 	color.Set(color.FgBlue)
 	log.Printf("Response from device: %s", resp)
 
