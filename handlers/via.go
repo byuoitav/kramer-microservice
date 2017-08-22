@@ -10,6 +10,7 @@ import (
 )
 
 func ResetVia(context echo.Context) error {
+	defer color.Unset()
 	address := context.Param("address")
 
 	err := via.Reset(address)
@@ -26,6 +27,7 @@ func ResetVia(context echo.Context) error {
 }
 
 func RebootVia(context echo.Context) error {
+	defer color.Unset()
 	address := context.Param("address")
 
 	err := via.Reboot(address)
@@ -39,4 +41,20 @@ func RebootVia(context echo.Context) error {
 	log.Printf("Success.")
 
 	return context.JSON(http.StatusOK, "Success")
+}
+
+func GetViaConnectedStatus(context echo.Context) error {
+	address := context.Param("address")
+
+	connected := via.IsConnected(address)
+
+	if connected {
+		color.Set(color.FgGreen)
+		log.Printf("%s is connected", address)
+	} else {
+		color.Set(color.FgRed)
+		log.Printf("%s is not connected", address)
+	}
+
+	return context.JSON(http.StatusOK, connected)
 }
