@@ -111,7 +111,7 @@ func newTimedConnection(address string, timer *time.Timer) (*net.TCPConn, error)
 	go func() {
 		<-timer.C
 		color.Set(color.FgBlue, color.Bold)
-		log.Printf("closing connection to %s", address)
+		log.Printf("Closing connection to %s", address)
 		color.Unset()
 
 		connMap.Delete(address)
