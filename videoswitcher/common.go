@@ -1,7 +1,6 @@
 package videoswitcher
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -10,40 +9,131 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/syncmap"
+
 	"github.com/fatih/color"
 )
 
-const CARRIAGE_RETURN = 0x0D
-const LINE_FEED = 0x0A
-const SPACE = 0x20
+const (
+	CARRIAGE_RETURN           = 0x0D
+	LINE_FEED                 = 0x0A
+	SPACE                     = 0x20
+	DELAY_BETWEEN_CONNECTIONS = time.Second * 10
+)
+
+var connMap = syncmap.Map{}
+var timerMap = syncmap.Map{}
 
 // Takes a command and sends it to the address, and returns the devices response to that command
-func SendCommand(address, command string) (string, error) {
+func SendCommand(address, command string, readWelcome bool) (resp string, err error) {
 	defer color.Unset()
-	color.Set(color.FgCyan)
 
-	// open telnet connection with address
-	log.Printf("Opening telnet connection with %s", address)
+	if !readWelcome {
+		var timer *time.Timer
+
+		// load the connection
+		c, ok := connMap.Load(address)
+		if !ok {
+			// open a new connection
+			color.Set(color.FgMagenta)
+			log.Printf("Opening telnet connection with %s", address)
+			color.Unset()
+
+			timer = time.NewTimer(DELAY_BETWEEN_CONNECTIONS)
+			timerMap.Store(address, timer)
+
+			c, err = newTimedConnection(address, timer)
+			if err != nil {
+				return "", err
+			}
+
+			connMap.Store(address, c)
+		} else {
+			color.Set(color.FgMagenta)
+			log.Printf("Using already open connection with %s", address)
+			color.Unset()
+
+			t, ok := timerMap.Load(address)
+			if !ok {
+				return "", errors.New(fmt.Sprintf("Failed to load timer for %s", timer))
+			}
+			timer = t.(*time.Timer)
+		}
+
+		// reset timer & write command
+		timer.Reset(DELAY_BETWEEN_CONNECTIONS)
+		conn := c.(*net.TCPConn)
+		resp, err = writeCommand(conn, command)
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		// open telnet connection with address
+		color.Set(color.FgMagenta)
+		log.Printf("Opening telnet connection with %s", address)
+		color.Unset()
+		conn, err := getConnection(address)
+		if err != nil {
+			return "", err
+		}
+		defer conn.Close()
+
+		// read the welcome message
+		if readWelcome {
+			color.Set(color.FgMagenta)
+			log.Printf("Reading welcome message")
+			color.Unset()
+			_, err := readUntil(CARRIAGE_RETURN, conn, 3)
+			if err != nil {
+				return "", err
+			}
+		}
+
+		// write command
+		resp, err = writeCommand(conn, command)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	color.Set(color.FgBlue)
+	log.Printf("Response from device: %s", resp)
+	return resp, nil
+}
+
+func newTimedConnection(address string, timer *time.Timer) (*net.TCPConn, error) {
 	conn, err := getConnection(address)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	defer conn.Close()
 
-	// read the welcom message
-	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
+	go func() {
+		<-timer.C
+		color.Set(color.FgBlue, color.Bold)
+		log.Printf("Closing connection to %s", address)
+		color.Unset()
 
-	// write command
+		connMap.Delete(address)
+		conn.Close()
+	}()
+
+	return conn, nil
+}
+
+func writeCommand(conn *net.TCPConn, command string) (string, error) {
 	command = strings.Replace(command, " ", string(SPACE), -1)
+	color.Set(color.FgMagenta)
 	log.Printf("Sending command %s", command)
+	color.Unset()
 	command += string(CARRIAGE_RETURN) + string(LINE_FEED)
 	conn.Write([]byte(command))
 
 	// get response
 	resp, err := readUntil(LINE_FEED, conn, 5)
-	color.Set(color.FgBlue)
-	log.Printf("Response from device: %s", resp)
-
+	if err != nil {
+		return "", err
+	}
 	return string(resp), nil
 }
 
@@ -117,7 +207,20 @@ func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte,
 
 		message = append(message, buffer...)
 	}
-	return bytes.Trim(message, "\x00"), nil
+
+	return removeNil(message), nil
+}
+
+func removeNil(b []byte) (ret []byte) {
+	for _, c := range b {
+		switch c {
+		case '\x00':
+			break
+		default:
+			ret = append(ret, c)
+		}
+	}
+	return ret
 }
 
 func charInBuffer(toCheck byte, buffer []byte) bool {
@@ -128,4 +231,10 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 	}
 
 	return false
+}
+
+func logError(e string) {
+	color.Set(color.FgRed)
+	log.Printf("%s", e)
+	color.Unset()
 }
