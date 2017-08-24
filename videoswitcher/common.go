@@ -14,65 +14,114 @@ import (
 	"github.com/fatih/color"
 )
 
-const CARRIAGE_RETURN = 0x0D
-const LINE_FEED = 0x0A
-const SPACE = 0x20
+const (
+	CARRIAGE_RETURN           = 0x0D
+	LINE_FEED                 = 0x0A
+	SPACE                     = 0x20
+	DELAY_BETWEEN_CONNECTIONS = time.Second * 10
+)
 
-var queue = make(map[string]uint64)
-var exec = syncmap.Map{}
+var connMap = syncmap.Map{}
+var timerMap = syncmap.Map{}
 
 // Takes a command and sends it to the address, and returns the devices response to that command
-func SendCommand(address, command string, readWelcome bool) (string, error) {
+func SendCommand(address, command string, readWelcome bool) (resp string, err error) {
 	defer color.Unset()
-	var commandNum uint64
 
 	if !readWelcome {
-		commandNum = queue[address]
-		queue[address]++
+		var timer *time.Timer
 
-		execNum, ok := exec.Load(address)
-		if execNum == commandNum || !ok {
-			color.Set(color.FgHiCyan)
-			log.Printf("Blocking new connections to %s", address)
+		// load the connection
+		c, ok := connMap.Load(address)
+		if !ok {
+			// open a new connection
+			color.Set(color.FgMagenta)
+			log.Printf("Opening telnet connection with %s", address)
 			color.Unset()
-			exec.Store(address, commandNum)
+
+			timer = time.NewTimer(DELAY_BETWEEN_CONNECTIONS)
+			timerMap.Store(address, timer)
+
+			c, err = newTimedConnection(address, timer)
+			if err != nil {
+				return "", err
+			}
+
+			connMap.Store(address, c)
 		} else {
-			// if not, then wait for your turn
-			color.Set(color.FgHiCyan)
-			log.Printf("Waiting for last command to execute command #%v on %s...", commandNum, address)
+			color.Set(color.FgMagenta)
+			log.Printf("Using already open connection with %s", address)
 			color.Unset()
 
-			waitForTurn(address, commandNum)
-
-			color.Set(color.FgHiCyan)
-			log.Printf("Executing command #%v on %s", commandNum, address)
-			color.Unset()
+			t, ok := timerMap.Load(address)
+			if !ok {
+				return "", errors.New(fmt.Sprintf("Failed to load timer for %s", timer))
+			}
+			timer = t.(*time.Timer)
 		}
-	}
 
-	// open telnet connection with address
-	color.Set(color.FgMagenta)
-	log.Printf("Opening telnet connection with %s", address)
-	color.Unset()
-	conn, err := getConnection(address)
-	if err != nil {
-		go endExec(address, commandNum, readWelcome)
-		return "", err
-	}
-	defer conn.Close()
+		// reset timer & write command
+		timer.Reset(DELAY_BETWEEN_CONNECTIONS)
+		conn := c.(*net.TCPConn)
+		resp, err = writeCommand(conn, command)
+		if err != nil {
+			return "", err
+		}
 
-	// read the welcome message
-	if readWelcome {
+	} else {
+		// open telnet connection with address
 		color.Set(color.FgMagenta)
-		log.Printf("Reading welcome message")
+		log.Printf("Opening telnet connection with %s", address)
 		color.Unset()
-		_, err := readUntil(CARRIAGE_RETURN, conn, 3)
+		conn, err := getConnection(address)
+		if err != nil {
+			return "", err
+		}
+		defer conn.Close()
+
+		// read the welcome message
+		if readWelcome {
+			color.Set(color.FgMagenta)
+			log.Printf("Reading welcome message")
+			color.Unset()
+			_, err := readUntil(CARRIAGE_RETURN, conn, 3)
+			if err != nil {
+				return "", err
+			}
+		}
+
+		// write command
+		resp, err = writeCommand(conn, command)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	// write command
+	color.Set(color.FgBlue)
+	log.Printf("Response from device: %s", resp)
+	return resp, nil
+}
+
+func newTimedConnection(address string, timer *time.Timer) (*net.TCPConn, error) {
+	conn, err := getConnection(address)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		<-timer.C
+		color.Set(color.FgBlue, color.Bold)
+		log.Printf("closing connection to %s", address)
+		color.Unset()
+
+		connMap.Delete(address)
+		conn.Close()
+	}()
+
+	return conn, nil
+}
+
+func writeCommand(conn *net.TCPConn, command string) (string, error) {
 	command = strings.Replace(command, " ", string(SPACE), -1)
 	color.Set(color.FgMagenta)
 	log.Printf("Sending command %s", command)
@@ -83,44 +132,9 @@ func SendCommand(address, command string, readWelcome bool) (string, error) {
 	// get response
 	resp, err := readUntil(LINE_FEED, conn, 5)
 	if err != nil {
-		go endExec(address, commandNum, readWelcome)
 		return "", err
 	}
-
-	go endExec(address, commandNum, readWelcome)
-
-	color.Set(color.FgBlue)
-	log.Printf("Response from device: %s", resp)
-
 	return string(resp), nil
-}
-
-func waitForTurn(address string, commandNum uint64) {
-	execNum, _ := exec.Load(address)
-	for commandNum != execNum {
-		execNum, _ = exec.Load(address)
-	}
-	return
-}
-
-func endExec(address string, commandNum uint64, readWelcome bool) {
-	if !readWelcome {
-		// it takes a few extra milliseconds to allow new connections after
-		// the last one has been closed. this waits for that before allowing
-		// new connections
-		time.Sleep(time.Millisecond * 5)
-
-		// get execNum and increment it
-		execNum, _ := exec.Load(address)
-		num := execNum.(uint64)
-		num++
-
-		exec.Store(address, num)
-
-		color.Set(color.FgHiCyan)
-		log.Printf("Finished executing command #%v. Allowing new connections to %s", commandNum, address)
-		color.Unset()
-	}
 }
 
 // This function converts a number (in a string) to index-based 1.
