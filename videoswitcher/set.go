@@ -4,14 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/byuoitav/av-api/statusevaluators"
 )
 
-func SwitchInput(address string, input string, output string) error {
+func SwitchInput(address, input, output string, readWelcome bool) (statusevaluators.Input, error) {
 	command := fmt.Sprintf("#VID %s>%s", input, output)
 
-	resp, err := SendCommand(address, command)
+	resp, err := SendCommand(address, command, readWelcome)
 	if err != nil {
-		return err
+		logError(err.Error())
+		return statusevaluators.Input{}, err
 	}
 
 	if strings.Contains(resp, "VID") {
@@ -21,13 +24,17 @@ func SwitchInput(address string, input string, output string) error {
 		parts = strings.Split(resp, ">")
 
 		if parts[0] == input && parts[1] == output {
-			return nil
+			var i statusevaluators.Input
+			i.Input = input
+			return i, err
 		}
 	}
-	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+
+	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
 
-func SetFrontLock(address string, state bool) error {
+func SetFrontLock(address string, state, readWelcome bool) error {
 	var num int8
 	if state {
 		num = 1
@@ -35,13 +42,16 @@ func SetFrontLock(address string, state bool) error {
 
 	command := fmt.Sprintf("#LOCK-FP %v", num)
 
-	resp, err := SendCommand(address, command)
+	resp, err := SendCommand(address, command, readWelcome)
 	if err != nil {
+		logError(err.Error())
 		return err
 	}
 
 	if strings.Contains(resp, "OK") {
 		return nil
 	}
+
+	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
