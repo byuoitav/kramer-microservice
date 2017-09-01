@@ -36,7 +36,6 @@ var StartChannel = make(chan CommandInfo, 1000)
 var connMap = make(map[string]chan CommandInfo)
 
 func StartRouter() {
-
 	stopChannel := make(chan string, 100)
 	for {
 		select {
@@ -48,7 +47,10 @@ func StartRouter() {
 			}
 
 			if channel, ok := connMap[command.Address]; ok {
-				//dump it and move on
+				color.Set(color.FgMagenta)
+				log.Printf("Using already open connection with %s", command.Address)
+				color.Unset()
+
 				channel <- command
 				continue
 			}
@@ -57,11 +59,10 @@ func StartRouter() {
 			newChannel <- command
 			connMap[command.Address] = newChannel
 
-			go startRoutine(newChannel, stopChannel, command.Address)
+			go startRoutine(newChannel, stopChannel, command.Address, command.ReadWelcome)
 		case addr := <-stopChannel:
-
-			color.Set(color.FgRed)
-			log.Printf("Close message received for %v", addr)
+			color.Set(color.FgHiCyan)
+			log.Printf("Deleting %v from connection map", addr)
 			color.Unset()
 
 			close(connMap[addr])
@@ -70,70 +71,48 @@ func StartRouter() {
 	}
 }
 
-func startRoutine(channel chan CommandInfo, stopChannel chan string, address string) {
-
-	conn, err := getConnection(address)
+func startRoutine(channel chan CommandInfo, stopChannel chan string, address string, readWelcome bool) {
+	conn, err := getConnection(address, readWelcome)
 	if err != nil {
-		logError(fmt.Sprintf("could not get connection for %v: %v", address, err.Error()))
+		logError(fmt.Sprintf("failed to open connection with %v: %v", address, err.Error()))
 		stopChannel <- address
 		return
 	}
-
 	defer conn.Close()
 
-	timer := time.NewTimer(25 * time.Second)
+	timer := time.NewTimer(20 * time.Second)
 
 	for {
 		select {
 		case command, ok := <-channel:
 			if !ok {
-				color.Set(color.FgRed)
-				log.Printf("channel for addr: %v was closed", address)
+				color.Set(color.FgHiCyan)
+				log.Printf("Closing connection with %v", address)
 				conn.Close()
-				stopChannel <- address
 				return
 			}
 
-			resp, err := SendCommand(command.Address, command.Command, command.ReadWelcome, conn)
+			resp, err := SendCommand(conn, command.Address, command.Command)
 			command.ResponseChannel <- Response{Response: resp, Err: err}
 
-			timer.Reset(25 * time.Second)
+			timer.Reset(20 * time.Second)
 		case <-timer.C:
-			color.Set(color.FgRed)
-			log.Printf("timer expired for %v, sending close message.", address)
+			color.Set(color.FgHiCyan)
+			log.Printf("Connection with %v expired, sending close message", address)
 			color.Unset()
+
 			stopChannel <- address
 		}
 	}
 }
 
 // Takes a command and sends it to the address, and returns the devices response to that command
-func SendCommand(address, command string, readWelcome bool, conn *net.TCPConn) (resp string, err error) {
+func SendCommand(conn *net.TCPConn, address, command string) (resp string, err error) {
 	defer color.Unset()
 
-	if !readWelcome {
-		resp, err = writeCommand(conn, command)
-		if err != nil {
-			return "", err
-		}
-
-	} else {
-		// read the welcome message
-		if readWelcome {
-			color.Set(color.FgMagenta)
-			log.Printf("Reading welcome message")
-			color.Unset()
-			_, err := readUntil(CARRIAGE_RETURN, conn, 3)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		// write command
-		resp, err = writeCommand(conn, command)
-		if err != nil {
-			return "", err
-		}
+	resp, err = writeCommand(conn, command)
+	if err != nil {
+		return "", err
 	}
 
 	color.Set(color.FgBlue)
@@ -197,7 +176,7 @@ func ToIndexZero(numString string) (string, error) {
 	return strconv.Itoa(num), nil
 }
 
-func getConnection(address string) (*net.TCPConn, error) {
+func getConnection(address string, readWelcome bool) (*net.TCPConn, error) {
 	color.Set(color.FgMagenta)
 	log.Printf("Opening telnet connection with %s", address)
 	color.Unset()
@@ -210,6 +189,16 @@ func getConnection(address string) (*net.TCPConn, error) {
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
 		return nil, err
+	}
+
+	if readWelcome {
+		color.Set(color.FgMagenta)
+		log.Printf("Reading welcome message")
+		color.Unset()
+		_, err := readUntil(CARRIAGE_RETURN, conn, 3)
+		if err != nil {
+			return conn, err
+		}
 	}
 
 	return conn, err
