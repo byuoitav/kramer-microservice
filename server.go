@@ -6,12 +6,17 @@ import (
 
 	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/kramer-microservice/handlers"
+	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
 
 func main() {
+
+	//start the router
+	go videoswitcher.StartRouter()
+
 	port := ":8014"
 	router := echo.New()
 	router.Pre(middleware.RemoveTrailingSlash())

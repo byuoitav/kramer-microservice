@@ -10,7 +10,18 @@ import (
 
 func GetCurrentInputByOutputPort(address, port string, readWelcome bool) (statusevaluators.Input, error) {
 	command := fmt.Sprintf("#VID? %s", port)
-	resp, err := SendCommand(address, command, readWelcome)
+
+	respChan := make(chan Response)
+
+	c := CommandInfo{respChan, address, command, readWelcome}
+
+	StartChannel <- c
+
+	re := <-respChan
+
+	resp := re.Response
+	err := re.Err
+
 	if err != nil {
 		logError(err.Error())
 		return statusevaluators.Input{}, err

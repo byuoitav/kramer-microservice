@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/sync/syncmap"
-
 	"github.com/fatih/color"
 )
 
@@ -21,64 +19,103 @@ const (
 	DELAY_BETWEEN_CONNECTIONS = time.Second * 10
 )
 
-var connMap = syncmap.Map{}
-var timerMap = syncmap.Map{}
+type Response struct {
+	Response string
+	Err      error
+}
+
+type CommandInfo struct {
+	ResponseChannel chan Response
+	Address         string
+	Command         string
+	ReadWelcome     bool
+}
+
+var StartChannel = make(chan CommandInfo, 1000)
+
+var connMap = make(map[string]chan CommandInfo)
+
+func StartRouter() {
+
+	stopChannel := make(chan string, 100)
+	for {
+		select {
+		case command, ok := <-StartChannel:
+			if !ok {
+				color.Set(color.FgRed)
+				log.Printf("routing channel was closed")
+				return
+			}
+
+			if channel, ok := connMap[command.Address]; ok {
+				//dump it and move on
+				channel <- command
+				continue
+			}
+
+			newChannel := make(chan CommandInfo, 1000)
+			newChannel <- command
+			connMap[command.Address] = newChannel
+
+			go startRoutine(newChannel, stopChannel, command.Address)
+		case addr := <-stopChannel:
+
+			color.Set(color.FgRed)
+			log.Printf("Close message received for %v", addr)
+			color.Unset()
+
+			close(connMap[addr])
+			delete(connMap, addr)
+		}
+	}
+}
+
+func startRoutine(channel chan CommandInfo, stopChannel chan string, address string) {
+
+	conn, err := getConnection(address)
+	if err != nil {
+		logError(fmt.Sprintf("could not get connection for %v: %v", address, err.Error()))
+		return
+	}
+
+	defer conn.Close()
+
+	timer := time.NewTimer(25 * time.Second)
+
+	for {
+		select {
+		case command, ok := <-channel:
+			if !ok {
+				color.Set(color.FgRed)
+				log.Printf("channel for addr: %v was closed", address)
+				conn.Close()
+				return
+			}
+
+			resp, err := SendCommand(command.Address, command.Command, command.ReadWelcome, conn)
+			command.ResponseChannel <- Response{Response: resp, Err: err}
+
+			timer.Reset(25 * time.Second)
+		case <-timer.C:
+			color.Set(color.FgRed)
+			log.Printf("timer expired for %v, sending close message.", address)
+			color.Unset()
+			stopChannel <- address
+		}
+	}
+}
 
 // Takes a command and sends it to the address, and returns the devices response to that command
-func SendCommand(address, command string, readWelcome bool) (resp string, err error) {
+func SendCommand(address, command string, readWelcome bool, conn *net.TCPConn) (resp string, err error) {
 	defer color.Unset()
 
 	if !readWelcome {
-		var timer *time.Timer
-
-		// load the connection
-		c, ok := connMap.Load(address)
-		if !ok {
-			// open a new connection
-			color.Set(color.FgMagenta)
-			log.Printf("Opening telnet connection with %s", address)
-			color.Unset()
-
-			timer = time.NewTimer(DELAY_BETWEEN_CONNECTIONS)
-			timerMap.Store(address, timer)
-
-			c, err = newTimedConnection(address, timer)
-			if err != nil {
-				return "", err
-			}
-
-			connMap.Store(address, c)
-		} else {
-			color.Set(color.FgMagenta)
-			log.Printf("Using already open connection with %s", address)
-			color.Unset()
-
-			t, ok := timerMap.Load(address)
-			if !ok {
-				return "", errors.New(fmt.Sprintf("Failed to load timer for %s", timer))
-			}
-			timer = t.(*time.Timer)
-		}
-
-		// reset timer & write command
-		timer.Reset(DELAY_BETWEEN_CONNECTIONS)
-		conn := c.(*net.TCPConn)
 		resp, err = writeCommand(conn, command)
 		if err != nil {
 			return "", err
 		}
 
 	} else {
-		// open telnet connection with address
-		color.Set(color.FgMagenta)
-		log.Printf("Opening telnet connection with %s", address)
-		color.Unset()
-		conn, err := getConnection(address)
-		if err != nil {
-			return "", err
-		}
-		defer conn.Close()
-
 		// read the welcome message
 		if readWelcome {
 			color.Set(color.FgMagenta)
@@ -100,25 +137,6 @@ func SendCommand(address, command string, readWelcome bool) (resp string, err er
 	color.Set(color.FgBlue)
 	log.Printf("Response from device: %s", resp)
 	return resp, nil
-}
-
-func newTimedConnection(address string, timer *time.Timer) (*net.TCPConn, error) {
-	conn, err := getConnection(address)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		<-timer.C
-		color.Set(color.FgBlue, color.Bold)
-		log.Printf("Closing connection to %s", address)
-		color.Unset()
-
-		connMap.Delete(address)
-		conn.Close()
-	}()
-
-	return conn, nil
 }
 
 func writeCommand(conn *net.TCPConn, command string) (string, error) {
@@ -178,6 +196,10 @@ func ToIndexZero(numString string) (string, error) {
 }
 
 func getConnection(address string) (*net.TCPConn, error) {
+	color.Set(color.FgMagenta)
+	log.Printf("Opening telnet connection with %s", address)
+	color.Unset()
+
 	addr, err := net.ResolveTCPAddr("tcp", address+":5000")
 	if err != nil {
 		return nil, err
