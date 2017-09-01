@@ -75,6 +75,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 	conn, err := getConnection(address)
 	if err != nil {
 		logError(fmt.Sprintf("could not get connection for %v: %v", address, err.Error()))
+		stopChannel <- address
 		return
 	}
 
@@ -89,6 +90,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 				color.Set(color.FgRed)
 				log.Printf("channel for addr: %v was closed", address)
 				conn.Close()
+				stopChannel <- address
 				return
 			}
 
