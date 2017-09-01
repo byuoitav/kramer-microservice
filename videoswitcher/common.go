@@ -78,6 +78,8 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 		return
 	}
 
+	defer conn.Close()
+
 	timer := time.NewTimer(25 * time.Second)
 
 	for {
@@ -86,6 +88,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 			if !ok {
 				color.Set(color.FgRed)
 				log.Printf("channel for addr: %v was closed", address)
+				conn.Close()
 				return
 			}
 
