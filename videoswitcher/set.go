@@ -39,8 +39,8 @@ func SwitchInput(address, input, output string, readWelcome bool) (statusevaluat
 		}
 	}
 
-	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
-	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	logError(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
+	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
 }
 
 func SetFrontLock(address string, state, readWelcome bool) error {
@@ -69,6 +69,6 @@ func SetFrontLock(address string, state, readWelcome bool) error {
 		return nil
 	}
 
-	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
-	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	logError(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
+	return errors.New(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
 }
