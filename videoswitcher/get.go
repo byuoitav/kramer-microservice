@@ -38,6 +38,6 @@ func GetCurrentInputByOutputPort(address, port string, readWelcome bool) (status
 		return i, nil
 	}
 
-	logError(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
-	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	logError(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
+	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
 }
