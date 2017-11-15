@@ -18,6 +18,7 @@ func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 	address := context.Param("address")
 	readWelcome, err := strconv.ParseBool(context.Param("bool"))
+
 	if err != nil {
 		return context.JSON(http.StatusBadRequest, "Error! welcome must be a true/false value")
 	}
@@ -49,6 +50,8 @@ func SwitchInput(context echo.Context) error {
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	ret.Input = fmt.Sprintf("%v:%v", ret.Input, output)
 
 	color.Set(color.FgGreen, color.Bold)
 	log.Printf("Success")
@@ -86,6 +89,7 @@ func GetInputByPort(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
+	input.Input = fmt.Sprintf("%v:%v", input.Input, port)
 	color.Set(color.FgGreen, color.Bold)
 	log.Printf("Input for output port %s is %v", port, input.Input)
 	return context.JSON(http.StatusOK, input)

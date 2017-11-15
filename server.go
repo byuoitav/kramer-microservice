@@ -6,6 +6,7 @@ import (
 
 	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/kramer-microservice/handlers"
+	"github.com/byuoitav/kramer-microservice/handlers2000"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
@@ -29,6 +30,9 @@ func main() {
 	secure.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
 	secure.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
 	secure.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
+
+	secure.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
+	secure.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
 
 	// via endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
