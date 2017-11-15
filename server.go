@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	port := ":8014"
 	router := echo.New()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
@@ -31,6 +30,7 @@ func main() {
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
 	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 
+	port := ":8014"
 	server := http.Server{
 		Addr:           port,
 		MaxHeaderBytes: 1024 * 10,
