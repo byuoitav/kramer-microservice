@@ -7,24 +7,29 @@ import (
 	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
+	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
 
 func main() {
+
+	//start the router
+	go videoswitcher.StartRouter()
+
+	port := ":8014"
 	router := echo.New()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
-	router.Use(CORS())
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	// videoswitcher endpoints
-	secure.GET("/:address/input/:input/:output", handlers.SwitchInput)
-	secure.GET("/:address/front-lock/:bool", handlers.SetFrontLock)
-	secure.GET("/:address/input/get/:port", handlers.GetInputByPort)
+	secure.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
+	secure.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
+	secure.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
 
 	secure.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
 	secure.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
@@ -34,7 +39,6 @@ func main() {
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
 	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 
-	port := ":8014"
 	server := http.Server{
 		Addr:           port,
 		MaxHeaderBytes: 1024 * 10,
@@ -42,15 +46,6 @@ func main() {
 
 	printHeader()
 	router.StartServer(&server)
-}
-
-func CORS() echo.MiddlewareFunc {
-	return func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-			return h(c)
-		}
-	}
 }
 
 func printHeader() {
@@ -63,19 +58,19 @@ func printHeader() {
 	fmt.Printf("Videoswitcher Endpoints:\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/:address/input/:input/:output\n")
+	fmt.Printf("\t/:address/welcome/:bool/input/:input/:output\n")
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tChange the current input for a given output\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/:address/front-lock/:bool\n")
+	fmt.Printf("\t/:address/welcome/:bool/front-lock/:bool2\n")
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tChange the front-button-lock status (true/false)\n")
 
 	color.Set(color.FgBlue)
-	fmt.Printf("\t/:address/input/get/:port\n")
+	fmt.Printf("\t/:address/welcome/:bool/input/get/:port\n")
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet the current input for a given output port\n")

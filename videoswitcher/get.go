@@ -4,17 +4,27 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/byuoitav/av-api/statusevaluators"
 )
 
-type Input struct {
-	Input string `json:"input"`
-}
-
-func GetCurrentInputByOutputPort(address string, port string) (Input, error) {
+func GetCurrentInputByOutputPort(address, port string, readWelcome bool) (statusevaluators.Input, error) {
 	command := fmt.Sprintf("#VID? %s", port)
-	resp, err := SendCommand(address, command)
+
+	respChan := make(chan Response)
+
+	c := CommandInfo{respChan, address, command, readWelcome}
+
+	StartChannel <- c
+
+	re := <-respChan
+
+	resp := re.Response
+	err := re.Err
+
 	if err != nil {
-		return Input{}, err
+		logError(err.Error())
+		return statusevaluators.Input{}, err
 	}
 
 	if strings.Contains(resp, "VID") {
@@ -23,9 +33,11 @@ func GetCurrentInputByOutputPort(address string, port string) (Input, error) {
 
 		parts = strings.Split(resp, ">")
 
-		var i Input
+		var i statusevaluators.Input
 		i.Input = parts[0]
 		return i, nil
 	}
-	return Input{}, errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+
+	logError(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
+	return statusevaluators.Input{}, errors.New(fmt.Sprintf("Incorrect response for command (%s). (Response: %s)", command, resp))
 }

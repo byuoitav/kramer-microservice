@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/byuoitav/av-api/statusevaluators"
 	"github.com/byuoitav/kramer-microservice/p2000"
-	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
@@ -27,7 +27,7 @@ func GetInputByPort(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, "[Kramer 2000 protocol]"+err.Error())
 	}
 
-	return context.JSON(http.StatusOK, videoswitcher.Input{Input: fmt.Sprintf("%v:%v", port, val)})
+	return context.JSON(http.StatusOK, statusevaluators.Input{Input: fmt.Sprintf("%v:%v", val, port)})
 }
 
 func SwitchInput(context echo.Context) error {
@@ -51,5 +51,5 @@ func SwitchInput(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, "[Kramer 2000 protocol]"+err.Error())
 	}
 
-	return context.JSON(http.StatusOK, videoswitcher.Input{Input: fmt.Sprintf("%v:%v", output, val)})
+	return context.JSON(http.StatusOK, statusevaluators.Input{Input: fmt.Sprintf("%v:%v", val, output)})
 }
