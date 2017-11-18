@@ -86,7 +86,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 	delayTimer := time.NewTimer(0 * time.Second)
 
 	for {
-		<-delayTimer.c
+		<-delayTimer.C
 		select {
 		case command, ok := <-channel:
 			if !ok {
@@ -100,7 +100,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 			command.ResponseChannel <- Response{Response: resp, Err: err}
 
 			timer.Reset(20 * time.Second)
-			delayTimer.Rest(150 * time.Millisecond)
+			delayTimer.Reset(150 * time.Millisecond)
 		case <-timer.C:
 			color.Set(color.FgHiCyan)
 			log.Printf("Connection with %v expired, sending close message", address)
