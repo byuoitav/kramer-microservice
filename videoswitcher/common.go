@@ -37,6 +37,7 @@ var StartChannel = make(chan CommandInfo, 1000)
 var connMap = make(map[string]chan CommandInfo)
 
 func StartRouter() {
+
 	stopChannel := make(chan string, 100)
 	for {
 		select {
@@ -106,6 +107,8 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 			log.Printf("Connection with %v expired, sending close message", address)
 			color.Unset()
 
+			//explicitly close it
+			conn.Close()
 			stopChannel <- address
 		}
 	}
