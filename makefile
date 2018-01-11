@@ -35,12 +35,6 @@ UNAME=$(shell echo $(DOCKER_USERNAME))
 EMAIL=$(shell echo $(DOCKER_EMAIL))
 PASS=$(shell echo $(DOCKER_PASSWORD))
 
-# angular
-NPM=npm
-NPM_INSTALL=$(NPM) install
-NG_BUILD=ng build --prod --aot --build-optimizer
-NG1=blueberry
-
 build: deps build-x86 build-arm build-web
 
 build-x86:
@@ -49,10 +43,6 @@ build-x86:
 build-arm: 
 	env GOOS=linux GOARCH=arm $(GOBUILD) -o $(NAME)-arm -v
 
-build-web: $(NG1)
-	cd $(NG1) && $(NPM_INSTALL) && $(NG_BUILD) --base-href="./$(NG1)/"
-	mv $(NG1)/dist $(NG1)-dist
-
 test: 
 	$(GOTEST) -v -race $(go list ./... | grep -v /vendor/) 
 
@@ -60,9 +50,8 @@ clean:
 	$(GOCLEAN)
 	rm -f $(NAME)-bin
 	rm -f $(NAME)-arm
-	rm -rf $(NG1)-dist
 
-run: $(NAME)-bin $(NG1)-dist
+run: $(NAME)-bin
 	./$(NAME)-bin
 
 deps: 
@@ -74,7 +63,7 @@ endif
 
 docker: docker-x86 docker-arm
 
-docker-x86: $(NAME)-bin $(NG1)-dist
+docker-x86: $(NAME)-bin
 ifeq "$(BRANCH)" "master"
 	$(eval BRANCH=development)
 endif
@@ -86,7 +75,7 @@ ifeq "$(BRANCH)" "development"
 	$(eval BRANCH=master)
 endif
 
-docker-arm: $(NAME)-arm $(NG1)-dist
+docker-arm: $(NAME)-arm
 ifeq "$(BRANCH)" "master"
 	$(eval BRANCH=development)
 endif
@@ -104,6 +93,3 @@ $(NAME)-bin:
 
 $(NAME)-arm:
 	$(MAKE) build-arm
-
-$(NG1)-dist:
-	$(MAKE) build-web
