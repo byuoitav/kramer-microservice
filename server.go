@@ -37,7 +37,7 @@ func main() {
 	// via functionality endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
-	secure.GET("/via/:address/volume/set/:value", handlers.SetViaVolume)
+	secure.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
 
 	// via informational endpoints
 	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
@@ -99,5 +99,17 @@ func printHeader() {
 	fmt.Printf("\t/via/:address/connected\n")
 
 	color.Set(color.FgHiCyan)
-	fmt.Printf("\t\tGet connected status of a via\n")
+	fmt.Printf("\t\tGet connected status of a Via device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/volume/set/:volvalue\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tSet volume level on a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/volume/level\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet volume level on a VIA device\n")
 }

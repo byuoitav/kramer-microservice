@@ -59,7 +59,7 @@ func SetVolume(address string,ViaVolumeLevel int) error {
 	command.Param1 = Set
 	command.Param2 = ViaVolumeLevel
 
-	log.Printf("Sending command %s to %s", Volume Set, address)
+	log.Printf("Sending volume set command to %s", address)
 
 	resp, err := SendCommand(command, address)
 	if err != nil {
@@ -75,11 +75,14 @@ func SetVolume(address string,ViaVolumeLevel int) error {
 		return resp
 		log.Printf("Volume command error - volume value was not in the command passed to %s", address)
 	} else {
-		r, _ := regexp.Compile("/\|\d/g")
-		VolumeSetFin := r.MatchString(resp)
+		//r, _ := regexp.Compile("/\|\d/g")
+    r, _ := regexp.Compile("/\d/g")
+		VolumeSetFin := r.MatchString(resp) //matching strings or should we convert to integer
 	}
   if VolumeSetFin != ViaVolumeLevel{
 		log.Printf("Volume command error - volume did not change to %s as requested", ViaVolumeLevel)
+	}else{
+		log.Printf("Volume change successful")
 	}
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
