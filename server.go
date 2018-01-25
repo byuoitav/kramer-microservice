@@ -34,10 +34,14 @@ func main() {
 	secure.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
 	secure.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
 
-	// via endpoints
+	// via functionality endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
+	secure.GET("/via/:address/volume/set/:value", handlers.SetViaVolume)
+
+	// via informational endpoints
 	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
+	secure.GET("/via/:address/volume/level", handlers.GetViaVolume)
 
 	server := http.Server{
 		Addr:           port,
