@@ -51,6 +51,11 @@ func SendCommand(command ViaCommand, addr string) (string, error) {
 
 	// get response
 	resp, err := readUntil('\n', conn, 5)
+	if err != nil {
+		log.Printf(color.HiRedString("Error with reading the connection: %v", err.Error()))
+		return "", err
+	}
+
 	if len(string(resp)) > 0 {
 		color.Set(color.FgBlue)
 		log.Printf("Response from device: %s", resp)
