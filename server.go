@@ -37,7 +37,9 @@ func main() {
 	// via functionality endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
-	secure.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
+
+  // Set the volume
+	secure.PUT("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
 
 	// via informational endpoints
 	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)

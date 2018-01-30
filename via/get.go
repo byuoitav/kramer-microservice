@@ -41,24 +41,23 @@ func GetVolume(address string) bool {
 }
 */
 // GetVolume for a VIA device
-func GetVolume(address string) (volcurrentlevel,error) {
+func GetVolume(address string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgYellow)
 
 	var command ViaCommand
-	command.Command = Vol
-	command.Param1 = Get
+	command.Command = "Vol"
+	command.Param1 = "Get"
 
 	log.Printf("Sending command to get VIA Volume to %s", address)
 
 	volcurrentlevel, err := SendCommand(command, address)
 	if err != nil {
-		return err
-	}
+		return "", err
+	}else{
   // Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
-	if strings.Contains(resp, "Vol|GET|"){
-		return volcurrentlevel
-	}
-
-	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
+	//if strings.Contains(volcurrentlevel, "Vol|GET|"){
+		return volcurrentlevel, nil
+	//}
+  }
 }
