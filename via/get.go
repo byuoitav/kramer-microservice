@@ -2,6 +2,8 @@ package via
 
 import (
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -22,6 +24,7 @@ func IsConnected(address string) bool {
 
 	return connected
 }
+
 /*
 func GetVolume(address string) bool {
 	defer color.Unset()
@@ -33,7 +36,7 @@ func GetVolume(address string) bool {
 	var command ViaCommand
 	resp, err := SendCommand(command, address)
 	if err == nil && strings.Contai
-	ns(resp, "Vol|Get|") {
+	ns(resp, "Vol|Get|") {volumefin
 		ViaVolume = true
 	}
 
@@ -41,7 +44,8 @@ func GetVolume(address string) bool {
 }
 */
 // GetVolume for a VIA device
-func GetVolume(address string) (string, error) {
+//func GetVolume(address string) (se.Volume, error) {
+func GetVolume(address string) (int, error) {
 	defer color.Unset()
 	color.Set(color.FgYellow)
 
@@ -52,12 +56,19 @@ func GetVolume(address string) (string, error) {
 	log.Printf("Sending command to get VIA Volume to %s", address)
 
 	volcurrentlevel, err := SendCommand(command, address)
+	re := regexp.MustCompile("[0-9]+")
+	vol := re.FindString(volcurrentlevel)
+	vfin, _ := strconv.Atoi(vol)
+
 	if err != nil {
-		return "", err
-	}else{
-  // Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
-	//if strings.Contains(volcurrentlevel, "Vol|GET|"){
-		return volcurrentlevel, nil
-	//}
-  }
+		//return se.Volume{}, err
+		return vfin, err //how do I handle int if I want to pass it as nil
+	} else {
+		// Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
+		//if strings.Contains(volcurrentlevel, "Vol|GET|"){
+
+		return vfin, nil
+
+		//}
+	}
 }

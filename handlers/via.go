@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -48,9 +48,10 @@ func RebootVia(context echo.Context) error {
 
 func SetViaVolume(context echo.Context) error {
 	defer color.Unset()
-	var VolumeSetFin string
+	//var VolumeSetFin string
 	address := context.Param("address")
 	value := context.Param("volvalue")
+	fmt.Printf("Value passed by SetViaVolume is %s", value)
 
 	volume, err := strconv.Atoi(value)
 	if err != nil {
@@ -63,9 +64,10 @@ func SetViaVolume(context echo.Context) error {
 			return context.JSON(http.StatusBadRequest, "Error: volume must be a value from 0 to 100!")
 		}
 	*/
+	volumec := strconv.Itoa(volume)
 	log.Printf("Setting volume for %s to %v...", address, volume)
 
-	response, err := via.SetVolume(address, volume)
+	response, err := via.SetVolume(address, volumec)
 	/*
 		if err != nil {
 			color.Set(color.FgRed)
@@ -82,22 +84,23 @@ func SetViaVolume(context echo.Context) error {
 	} else if strings.Contains(response, "Error2") {
 		return context.JSON(http.StatusBadRequest, "volume value was not in the command passed")
 		log.Printf("Volume command error - volume value was not in the command passed to %s", address)
-	} else {
-		//r, _ := regexp.Compile("/\|\d/g")
-		r, _ := regexp.Compile("/\\d/g")
-		VolumeSetFin = r.FindString(response) //matching strings or should we convert to integer
-	}
-
-	if VolumeSetFin != "volume" {
-		return context.JSON(http.StatusBadRequest, "Volume command error - volume did not change as requested")
-		log.Printf("Volume command error - volume did not change to %s as requested", volume)
-	} else {
-		log.Printf("Success. Volume changed to %s", volume)
-		color.Set(color.FgGreen, color.Bold)
-
-		return context.JSON(http.StatusOK, "Success")
-	}
-	return context.JSON(http.StatusBadRequest, "An error has occured, try setting volume again")
+	} //else {
+	//r, _ := regexp.Compile("/\|\d/g")
+	/*	r, _ := regexp.Compile("/\\d/g")
+			VolumeSetFin = r.FindString(response) //matching strings or should we convert to integer
+			fmt.Printf("Value set is %s", VolumeSetFin)
+		}
+		/*
+			if VolumeSetFin != volumec {
+				return context.JSON(http.StatusBadRequest, "/tVolume command error - volume did not change as requested")
+				log.Printf("Volume command error - volume did not change to %s as requested", volume)
+			} else {
+				log.Printf("Success. Volume changed to %s", volume)
+				color.Set(color.FgGreen, color.Bold)
+	*/
+	return context.JSON(http.StatusOK, "Success")
+	//}
+	//return context.JSON(http.StatusBadRequest, "An error has occured, try setting volume again")
 }
 
 func GetViaConnectedStatus(context echo.Context) error {
@@ -121,13 +124,16 @@ func GetViaVolume(context echo.Context) error {
 
 	ViaVolume, _ := via.GetVolume(address)
 
-	if ViaVolume != "" {
+	vf := strconv.Itoa(ViaVolume)
+
+	if vf != "" {
 		color.Set(color.FgGreen, color.Bold)
-		log.Printf("VIA volume is currently set to %s", ViaVolume)
-		return context.JSON(http.StatusOK, ViaVolume)
+		log.Printf("VIA volume is currently set to %s", vf)
+		return context.JSON(http.StatusOK, vf)
 	} else {
 		color.Set(color.FgRed)
 		log.Printf("Failed to retreive VIA volume")
 		return context.JSON(http.StatusBadRequest, "Failed to retreive VIA volume")
 	}
+
 }

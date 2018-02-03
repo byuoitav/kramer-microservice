@@ -50,14 +50,14 @@ func Reset(address string) error {
 	return errors.New(fmt.Sprintf("Incorrect response for command. (Response: %s)", resp))
 }
 
-func SetVolume(address string,volume int) (string, error) {
+func SetVolume(address string, volumec string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgYellow)
 
 	var command ViaCommand
 	command.Command = "Vol"
 	command.Param1 = "Set"
-	command.Param2 = "volume"
+	command.Param2 = volumec
 
 	log.Printf("Sending volume set command to %s", address)
 
@@ -66,5 +66,5 @@ func SetVolume(address string,volume int) (string, error) {
 		return "", errors.New(fmt.Sprintf("Error in setting volume on %s", address))
 	}
 
-  return resp, nil
+	return resp, nil
 }
