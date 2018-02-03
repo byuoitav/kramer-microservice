@@ -62,7 +62,7 @@ func GetVolume(address string) (int, error) {
 
 	if err != nil {
 		//return se.Volume{}, err
-		return vfin, err //how do I handle int if I want to pass it as nil
+		return 0, err //passing 0 response along with error
 	} else {
 		// Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
 		//if strings.Contains(volcurrentlevel, "Vol|GET|"){
