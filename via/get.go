@@ -2,8 +2,6 @@ package via
 
 import (
 	"log"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -55,20 +53,31 @@ func GetVolume(address string) (int, error) {
 
 	log.Printf("Sending command to get VIA Volume to %s", address)
 
-	volcurrentlevel, err := SendCommand(command, address)
-	re := regexp.MustCompile("[0-9]+")
-	vol := re.FindString(volcurrentlevel)
-	vfin, _ := strconv.Atoi(vol)
-
+	vollevel, err := SendCommand(command, address)
 	if err != nil {
-		//return se.Volume{}, err
-		return 0, err //passing 0 response along with error
+		return 0, err
 	} else {
-		// Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
-		//if strings.Contains(volcurrentlevel, "Vol|GET|"){
+		//check the error first and then parse
+		// Moved Parsing over to Common.go so anything can parse out the number
+		/*
+			re := regexp.MustCompile("[0-9]+")
+			vol := re.FindString(volcurrentlevel)
+			vfin, _ := strconv.Atoi(vol)
+		*/
 
-		return vfin, nil
+		// parse the returned string for the number that volume is set to
+		volint, err := VolumeParse(vollevel)
 
-		//}
+		if err != nil {
+			//return se.Volume{}, err
+			return 0, err //passing 0 response along with error
+		} else {
+			// Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
+			//if strings.Contains(volcurrentlevel, "Vol|GET|"){
+
+			return volint, nil
+
+			//}
+		}
 	}
 }

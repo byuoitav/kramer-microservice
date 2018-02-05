@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/byuoitav/kramer-microservice/via"
 	"github.com/fatih/color"
@@ -59,48 +58,19 @@ func SetViaVolume(context echo.Context) error {
 	} else if volume > 100 || volume < 0 {
 		return context.JSON(http.StatusBadRequest, "Error: volume must be a value from 0 to 100!")
 	}
-	/*
-		if volume > 100 || volume < 0 {
-			return context.JSON(http.StatusBadRequest, "Error: volume must be a value from 0 to 100!")
-		}
-	*/
+
 	volumec := strconv.Itoa(volume)
 	log.Printf("Setting volume for %s to %v...", address, volume)
 
 	response, err := via.SetVolume(address, volumec)
-	/*
-		if err != nil {
-			color.Set(color.FgRed)
-			log.Printf("There was a problem: %v", err.Error())
-			return context.JSON(http.StatusInternalServerError, err.Error())
-		}
-	*/
-	// Error handling - Handle with care
-	// Error1 - value is outside the bounds of 0-100
-	// Error2 - no value set for volume
-	if strings.Contains(response, "Error1") {
-		return context.JSON(http.StatusBadRequest, "Volume command error - volume value is outside the bounds of 0-100")
-		log.Printf("Volume command error - volume value %s is outside the bounds of 0-100", "volume")
-	} else if strings.Contains(response, "Error2") {
-		return context.JSON(http.StatusBadRequest, "volume value was not in the command passed")
-		log.Printf("Volume command error - volume value was not in the command passed to %s", address)
-	} //else {
-	//r, _ := regexp.Compile("/\|\d/g")
-	/*	r, _ := regexp.Compile("/\\d/g")
-			VolumeSetFin = r.FindString(response) //matching strings or should we convert to integer
-			fmt.Printf("Value set is %s", VolumeSetFin)
-		}
-		/*
-			if VolumeSetFin != volumec {
-				return context.JSON(http.StatusBadRequest, "/tVolume command error - volume did not change as requested")
-				log.Printf("Volume command error - volume did not change to %s as requested", volume)
-			} else {
-				log.Printf("Success. Volume changed to %s", volume)
-				color.Set(color.FgGreen, color.Bold)
-	*/
+
+	if err != nil {
+		//errors.New(fmt.Sprintf("Volume value was not in the command passed"))
+		log.Printf("An Error Occured: %s", err)
+		return context.JSON(http.StatusBadRequest, "An error has occured while setting volume")
+	}
+	log.Printf("Success: %s", response)
 	return context.JSON(http.StatusOK, "Success")
-	//}
-	//return context.JSON(http.StatusBadRequest, "An error has occured, try setting volume again")
 }
 
 func GetViaConnectedStatus(context echo.Context) error {
@@ -122,11 +92,11 @@ func GetViaConnectedStatus(context echo.Context) error {
 func GetViaVolume(context echo.Context) error {
 	address := context.Param("address")
 
-	ViaVolume, _ := via.GetVolume(address)
+	ViaVolume, err := via.GetVolume(address)
 
 	vf := strconv.Itoa(ViaVolume)
 
-	if vf != "" {
+	if err != nil {
 		color.Set(color.FgGreen, color.Bold)
 		log.Printf("VIA volume is currently set to %s", vf)
 		return context.JSON(http.StatusOK, vf)
