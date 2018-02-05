@@ -54,6 +54,7 @@ func GetVolume(address string) (int, error) {
 	log.Printf("Sending command to get VIA Volume to %s", address)
 
 	vollevel, err := SendCommand(command, address)
+
 	if err != nil {
 		return 0, err
 	} else {
