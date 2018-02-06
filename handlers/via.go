@@ -48,7 +48,6 @@ func RebootVia(context echo.Context) error {
 
 func SetViaVolume(context echo.Context) error {
 	defer color.Unset()
-	//var VolumeSetFin string
 	address := context.Param("address")
 	value := context.Param("volvalue")
 	fmt.Printf("Value passed by SetViaVolume is %s", value)
@@ -66,7 +65,6 @@ func SetViaVolume(context echo.Context) error {
 	response, err := via.SetVolume(address, volumec)
 
 	if err != nil {
-		//errors.New(fmt.Sprintf("Volume value was not in the command passed"))
 		log.Printf("An Error Occured: %s", err)
 		return context.JSON(http.StatusBadRequest, "An error has occured while setting volume")
 	}

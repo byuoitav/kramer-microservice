@@ -173,6 +173,7 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 	return false
 }
 
+// parser to pull out the volume level from the VIA API returned string
 func VolumeParse(vollevel string) (int, error) {
 	re := regexp.MustCompile("[0-9]+")
 	vol := re.FindString(vollevel)
