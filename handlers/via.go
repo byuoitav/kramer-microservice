@@ -93,15 +93,13 @@ func GetViaVolume(context echo.Context) error {
 
 	ViaVolume, err := via.GetVolume(address)
 
-	vf := strconv.Itoa(ViaVolume)
-
 	if err != nil {
 		color.Set(color.FgRed)
 		log.Printf("Failed to retreive VIA volume")
 		return context.JSON(http.StatusBadRequest, "Failed to retreive VIA volume")
 	} else {
 		color.Set(color.FgGreen, color.Bold)
-		log.Printf("VIA volume is currently set to %s", vf)
+		log.Printf("VIA volume is currently set to %v", strconv.Itoa(ViaVolume))
 		return context.JSON(http.StatusOK, se.Volume{ViaVolume})
 	}
 
