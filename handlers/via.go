@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -50,13 +49,14 @@ func SetViaVolume(context echo.Context) error {
 	defer color.Unset()
 	address := context.Param("address")
 	value := context.Param("volvalue")
-	fmt.Printf("Value passed by SetViaVolume is %s", value)
+	log.Printf("Value passed by SetViaVolume is %v", value)
 
 	volume, err := strconv.Atoi(value)
 	if err != nil {
 		return context.JSON(http.StatusBadRequest, err.Error())
-	} else if volume > 100 || volume < 0 {
-		return context.JSON(http.StatusBadRequest, "Error: volume must be a value from 0 to 100!")
+	} else if volume > 100 || volume < 1 {
+		log.Printf(color.HiRedString("Volume command error - volume value %s is outside the bounds of 1-100", value))
+		return context.JSON(http.StatusBadRequest, "Error: volume must be a value from 1 to 100!")
 	}
 
 	volumec := strconv.Itoa(volume)
