@@ -66,17 +66,6 @@ func SetVolume(address string, volumec string) (string, error) {
 		return "", errors.New(fmt.Sprintf("Error in setting volume on %s", address))
 	}
 
-	// Error handling - Handle with care
-	// if command returns vol|set|Error1 - value is outside the bounds of 0-100
-	// if command returns vol|set|Error2 - no value set for volume
-	if strings.Contains(resp, "Error1") {
-		log.Printf("Volume command error - volume value %s is outside the bounds of 0-100", volumec)
-		return "", errors.New(fmt.Sprintf("Volume value is outside the bounds of 0-100"))
-	} else if strings.Contains(resp, "Error2") {
-		log.Printf("Volume command error - volume value was not in the command passed to %s", address)
-		return "", errors.New(fmt.Sprintf("Volume value was not in the command passed"))
-	}
-
 	return resp, nil
 
 }
