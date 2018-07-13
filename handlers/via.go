@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	se "github.com/byuoitav/av-api/statusevaluators"
+	"github.com/byuoitav/common/status"
 	"github.com/byuoitav/kramer-microservice/via"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
@@ -100,7 +100,7 @@ func GetViaVolume(context echo.Context) error {
 	} else {
 		color.Set(color.FgGreen, color.Bold)
 		log.Printf("VIA volume is currently set to %v", strconv.Itoa(ViaVolume))
-		return context.JSON(http.StatusOK, se.Volume{ViaVolume})
+		return context.JSON(http.StatusOK, status.Volume{ViaVolume})
 	}
 
 }
