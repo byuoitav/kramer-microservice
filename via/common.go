@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/fatih/color"
@@ -51,6 +53,11 @@ func SendCommand(command ViaCommand, addr string) (string, error) {
 
 	// get response
 	resp, err := readUntil('\n', conn, 5)
+	if err != nil {
+		log.Printf(color.HiRedString("Error with reading the connection: %v", err.Error()))
+		return "", err
+	}
+
 	if len(string(resp)) > 0 {
 		color.Set(color.FgBlue)
 		log.Printf("Response from device: %s", resp)
@@ -164,4 +171,19 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 	}
 
 	return false
+}
+
+// parser to pull out the volume level from the VIA API returned string
+func VolumeParse(vollevel string) (int, error) {
+	re := regexp.MustCompile("[0-9]+")
+	vol := re.FindString(vollevel)
+	vfin, err := strconv.Atoi(vol)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("Error converting response: %s", err.Error()))
+		color.Set(color.FgRed)
+		log.Printf("%s", err.Error())
+		color.Unset()
+		return 0, err
+	}
+	return vfin, nil
 }
