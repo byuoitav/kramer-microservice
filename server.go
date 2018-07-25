@@ -34,10 +34,16 @@ func main() {
 	secure.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
 	secure.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
 
-	// via endpoints
+	// via functionality endpoints
 	secure.GET("/via/:address/reset", handlers.ResetVia)
 	secure.GET("/via/:address/reboot", handlers.RebootVia)
+
+	// Set the volume
+	secure.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
+
+	// via informational endpoints
 	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
+	secure.GET("/via/:address/volume/level", handlers.GetViaVolume)
 
 	server := http.Server{
 		Addr:           port,
@@ -95,5 +101,17 @@ func printHeader() {
 	fmt.Printf("\t/via/:address/connected\n")
 
 	color.Set(color.FgHiCyan)
-	fmt.Printf("\t\tGet connected status of a via\n")
+	fmt.Printf("\t\tGet connected status of a Via device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/volume/set/:volvalue\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tSet volume level on a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/volume/level\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet volume level on a VIA device\n")
 }
