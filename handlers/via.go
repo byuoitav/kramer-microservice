@@ -69,7 +69,8 @@ func SetViaVolume(context echo.Context) error {
 		return context.JSON(http.StatusBadRequest, "An error has occured while setting volume")
 	}
 	log.Printf("Success: %s", response)
-	return context.JSON(http.StatusOK, "Success")
+
+	return context.JSON(http.StatusOK, status.Volume{Volume: volume})
 }
 
 func GetViaConnectedStatus(context echo.Context) error {
