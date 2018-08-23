@@ -3,15 +3,21 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
+	"github.com/byuoitav/kramer-microservice/monitor"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
+
+func init() {
+	name := os.Getenv("PI_HOSTNAME")
+}
 
 func main() {
 
@@ -25,6 +31,11 @@ func main() {
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
+
+	//start the VIA monitoring connection if the Controller is CP1
+	if strings.Contains(string(name), "-CP1") {
+		go monitor.startmonitor()
+	}
 
 	// videoswitcher endpoints
 	secure.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)

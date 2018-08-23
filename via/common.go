@@ -9,7 +9,7 @@ import (
 	"net"
 	"regexp"
 	"strconv"
-	//	"time"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -143,7 +143,7 @@ func getConnection(address string) (*net.TCPConn, error) {
 }
 
 func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte, error) {
-	//conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
+	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
 
 	buffer := make([]byte, 128)
 	message := []byte{}
@@ -171,6 +171,24 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 	}
 
 	return false
+}
+
+// Build persistent connection with VIA
+func PersistConnection(addr string) (string, error) {
+	defer color.Unset()
+	color.Set(color.FgCyan)
+
+	// get the connection
+	log.Printf("Opening persistent telnet connection for reading events from %s", addr)
+	pconn, err := getConnection(addr)
+	if err != nil {
+		return "", err
+	}
+
+	// login
+	login(pconn)
+
+	return "", nil
 }
 
 // parser to pull out the volume level from the VIA API returned string
