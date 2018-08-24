@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common/db"
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
 	"github.com/byuoitav/kramer-microservice/monitor"
@@ -15,8 +19,24 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
+/* global variable declaration */
+var Name string
+var DeviceList []structs.Device
+
 func init() {
-	name := os.Getenv("PI_HOSTNAME")
+	Name = os.Getenv("PI_HOSTNAME")
+	var err error
+	fmt.Printf("Gathering information for %s from database\n", Name)
+
+	s := strings.Split(Name, "-")
+	sa := s[0:2]
+	room := strings.Join(sa, "-")
+	fmt.Printf("Waiting for database entry for %s\n", Name)
+	// Pull room information from db
+	DeviceList, err = db.GetDB().GetDevicesByRoomAndType(room, "via-connect-pro")
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+	}
 }
 
 func main() {
@@ -33,8 +53,14 @@ func main() {
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	//start the VIA monitoring connection if the Controller is CP1
-	if strings.Contains(string(name), "-CP1") {
-		go monitor.startmonitor()
+	//hostname := os.Getenv("PI_HOSTNAME")
+	if strings.Contains(Name, "-CP1") {
+		for _, Device := range DeviceList {
+			go monitor.StartMonitoring(Device)
+			resp, _ := json.Marshal(Device)
+			fmt.Printf(string(resp))
+			fmt.Printf("\n")
+		}
 	}
 
 	// videoswitcher endpoints
