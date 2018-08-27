@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -37,9 +37,9 @@ func init() {
 	if err != nil {
 		fmt.Printf("Error: %v", err)
 	}
-	fmt.Printf("Device List: \n")
-	r, _ := json.Marshal(DeviceList)
-	fmt.Printf(string(r))
+	//fmt.Printf("Device List: \n")
+	//r, _ := json.Marshal(DeviceList)
+	//fmt.Printf(string(r))
 }
 
 func main() {
@@ -60,9 +60,9 @@ func main() {
 	if strings.Contains(Name, "-CP1") {
 		for _, Device := range DeviceList {
 			go monitor.StartMonitoring(Device)
-			resp, _ := json.Marshal(Device)
-			fmt.Printf(string(resp))
-			fmt.Printf("\n")
+			//resp, _ := json.Marshal(Device)
+			//fmt.Printf(string(resp))
+			//fmt.Printf("\n")
 		}
 	}
 
