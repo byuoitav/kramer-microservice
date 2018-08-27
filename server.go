@@ -37,6 +37,9 @@ func init() {
 	if err != nil {
 		fmt.Printf("Error: %v", err)
 	}
+	fmt.Printf("Device List: \n")
+	r, _ := json.Marshal(DeviceList)
+	fmt.Printf(string(r))
 }
 
 func main() {
