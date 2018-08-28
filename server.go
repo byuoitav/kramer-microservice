@@ -20,26 +20,25 @@ import (
 )
 
 /* global variable declaration */
-var Name string
-var DeviceList []structs.Device
+// Changed: lowercase vars
+var name string
+var deviceList []structs.Device
 
 func init() {
-	Name = os.Getenv("PI_HOSTNAME")
+	name = os.Getenv("PI_HOSTNAME")
 	var err error
-	fmt.Printf("Gathering information for %s from database\n", Name)
+	fmt.Printf("Gathering information for %s from database\n", name)
 
-	s := strings.Split(Name, "-")
+	s := strings.Split(name, "-")
 	sa := s[0:2]
 	room := strings.Join(sa, "-")
-	fmt.Printf("Waiting for database entry for %s\n", Name)
+	fmt.Printf("Waiting for database entry for %s\n", name)
+
 	// Pull room information from db
-	DeviceList, err = db.GetDB().GetDevicesByRoomAndType(room, "via-connect-pro")
+	deviceList, err = db.GetDB().GetDevicesByRoomAndType(room, "via-connect-pro")
 	if err != nil {
 		fmt.Printf("Error: %v", err)
 	}
-	//fmt.Printf("Device List: \n")
-	//r, _ := json.Marshal(DeviceList)
-	//fmt.Printf(string(r))
 }
 
 func main() {
@@ -56,13 +55,9 @@ func main() {
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	//start the VIA monitoring connection if the Controller is CP1
-	//hostname := os.Getenv("PI_HOSTNAME")
-	if strings.Contains(Name, "-CP1") {
-		for _, Device := range DeviceList {
-			go monitor.StartMonitoring(Device)
-			//resp, _ := json.Marshal(Device)
-			//fmt.Printf(string(resp))
-			//fmt.Printf("\n")
+	if strings.Contains(name, "-CP1") {
+		for _, device := range deviceList {
+			go monitor.StartMonitoring(device)
 		}
 	}
 
