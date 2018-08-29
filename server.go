@@ -1,17 +1,45 @@
 package main
 
 import (
+	//"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common/db"
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
+	"github.com/byuoitav/kramer-microservice/monitor"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
+
+/* global variable declaration */
+// Changed: lowercase vars
+var name string
+var deviceList []structs.Device
+
+func init() {
+	name = os.Getenv("PI_HOSTNAME")
+	var err error
+	fmt.Printf("Gathering information for %s from database\n", name)
+
+	s := strings.Split(name, "-")
+	sa := s[0:2]
+	room := strings.Join(sa, "-")
+	fmt.Printf("Waiting for database entry for %s\n", name)
+
+	// Pull room information from db
+	deviceList, err = db.GetDB().GetDevicesByRoomAndType(room, "via-connect-pro")
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+	}
+}
 
 func main() {
 
@@ -25,6 +53,13 @@ func main() {
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
+
+	//start the VIA monitoring connection if the Controller is CP1
+	if strings.Contains(name, "-CP1") {
+		for _, device := range deviceList {
+			go monitor.StartMonitoring(device)
+		}
+	}
 
 	// videoswitcher endpoints
 	secure.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
