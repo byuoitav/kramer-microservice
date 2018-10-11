@@ -157,9 +157,11 @@ func writePump(device structs.Device, pconn *net.TCPConn) {
 		log.Printf(color.HiRedString("Connection to VIA %v is dying.", device.Address))
 	}(device)
 	ticker := time.NewTicker(pingInterval * time.Millisecond)
-
+	// Once the pingInterval is reached, execute the ping -
+	// On Error, return and execute deferred to close
 	for t := range ticker.C {
 		fmt.Println("I just hit my ticker time", t)
+
 	}
 
 }
