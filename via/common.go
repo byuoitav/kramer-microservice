@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -115,9 +116,9 @@ func (c *Command) writeCommand(conn *net.TCPConn) error {
 // AddAuth adds auth onto the command
 // changed: Made function Public
 func (c *Command) addAuth(password bool) {
-	c.Username = "su"
+	c.Username = os.Getenv("VIA_USERNAME")
 	if password {
-		c.Password = "supass"
+		c.Password = os.Getenv("VIA_PASSWORD")
 	}
 }
 
