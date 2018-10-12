@@ -18,7 +18,7 @@ import (
 
 const (
 	// Intervals to wait between retry attempts
-	retryInterval = 10 * time.Second
+	reconnInterval = 10 * time.Second
 
 	// Ping Internal (in milliseconds, because it cares)
 	pingInterval = 60000
@@ -57,23 +57,22 @@ type message struct {
 }
 
 // Ping over connection to keep alive.
-func pingTest(c via.Command, pconn *net.TCPConn) error {
+func pingTest(pconn *net.TCPConn) error {
 	defer color.Unset()
-	defer color.Unset()
-	color.Set(color.FgYellow)
+	color.Set(color.FgCyan)
+	var c via.Command
+	c.Username = "su"
 	c.Command = "IpInfo"
 	log.Printf("Oh ho, Pongo, you old rascal!")
 	b, err := xml.Marshal(c)
 	if err != nil {
 		return err
 	}
-
-	if len(c.Password) == 0 {
-		log.Printf("Sending Command: %s", b)
+	_, err = pconn.Write(b)
+	if err != nil {
+		return err
 	}
-
-	pconn.Write(b)
-	return nil
+	return err
 }
 
 // Retry connection if connection has failed
@@ -82,8 +81,8 @@ func retryViaConnection(device structs.Device, pconn *net.TCPConn, event events.
 	addr := device.Address
 	pconn, err := via.PersistConnection(addr)
 	for err != nil {
-		log.Printf(color.MagentaString("Retry Failed, Trying again in 10 seconds"))
-		time.Sleep(retryInterval)
+		log.Printf(color.RedString("Retry Failed, Trying again in 10 seconds"))
+		time.Sleep(reconnInterval)
 		pconn, err = via.PersistConnection(addr)
 	}
 
@@ -154,16 +153,18 @@ func writePump(device structs.Device, pconn *net.TCPConn) {
 	// defer closing connection
 	defer func(device structs.Device) {
 		pconn.Close()
-		log.Printf(color.HiRedString("Connection to VIA %v is dying.", device.Address))
+		log.Printf(color.HiRedString("Error on write pump for %v. Write pump closing.", device.Address))
 	}(device)
 	ticker := time.NewTicker(pingInterval * time.Millisecond)
 	// Once the pingInterval is reached, execute the ping -
-	// On Error, return and execute deferred to close
-	for t := range ticker.C {
-		fmt.Println("I just hit my ticker time", t)
-
+	// On Error, return and execute deferred to close the connection
+	for range ticker.C {
+		err := pingTest(pconn)
+		if err != nil {
+			log.Printf(color.HiRedString("Ping Failed Error: %v", err))
+			return
+		}
 	}
-
 }
 
 // StartMonitoring service for each VIA in a room
