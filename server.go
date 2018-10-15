@@ -3,9 +3,11 @@ package main
 import (
 	//"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/common/db"
@@ -32,12 +34,42 @@ func init() {
 	s := strings.Split(name, "-")
 	sa := s[0:2]
 	room := strings.Join(sa, "-")
-	fmt.Printf("Waiting for database entry for %s\n", name)
+	//fmt.Printf("Waiting for database entry for %s\n", name)
+	fmt.Printf("Waiting for database . . . .\n")
+	for {
+		// Pull room information from db
+		state, err := db.GetDB().GetStatus()
+		log.Printf("%v\n", state)
+		if (err != nil || state != "completed") && !(len(os.Getenv("DEV_ROUTER")) > 0 || len(os.Getenv("STOP_REPLICATION")) > 0) {
+			log.Printf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		log.Printf(color.GreenString("Database replication state: %v", state))
 
-	// Pull room information from db
+		devices, err := db.GetDB().GetDevicesByRoomAndRole(room, "EventRouter")
+		if err != nil {
+			log.Printf(color.RedString("Connecting to the Configuration DB failed, retrying in 5 seconds."))
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		if len(devices) == 0 {
+			//there's a chance that there ARE routers in the room, but the initial database replication is occuring.
+			//we're good, keep going
+			state, err := db.GetDB().GetStatus()
+			if (err != nil || state != "completed") && !(len(os.Getenv("STOP_REPLICATION")) > 0) {
+				log.Printf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
+				time.Sleep(5 * time.Second)
+				continue
+			}
+		}
+		break
+		log.Printf(color.BlueString("Connection to the Configuration DB established."))
+	}
 	deviceList, err = db.GetDB().GetDevicesByRoomAndType(room, "via-connect-pro")
 	if err != nil {
-		fmt.Printf("Error: %v", err)
+		fmt.Printf("Error: %v\n", err)
 	}
 }
 
