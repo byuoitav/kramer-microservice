@@ -1,11 +1,13 @@
 package monitor
 
 import (
+	"bufio"
 	"encoding/xml"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -104,40 +106,74 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 
 	for {
 		var m message
-		//Set buffers for accepting data
-		Buffer := make([]byte, 0, 2048)
-		tmp := make([]byte, 256)
-
 		//set deadline for reads - keep the connection alive during that time
 		pconn.SetReadDeadline(time.Now().Add(timeoutDuration))
 		//start reader to read into buffer
-		r, err := pconn.Read(tmp)
+		reader := bufio.NewReader(pconn)
+		r, err := reader.ReadBytes('\x0D')
 		if err != nil {
 			err = fmt.Errorf("error reading from system: %s", err.Error())
 			log.Printf(err.Error())
 			return
 		}
-		Buffer = append(Buffer, tmp[:r]...)
+		//Buffer = append(Buffer, tmp[:r]...)
 
-		fmt.Println(string(Buffer))
-		str := fmt.Sprintf("%s", Buffer)
-		Out := strings.Split(str, "|")
-		switch events := Out[0]; events {
-		case "PList":
-			m.EventType = Out[0]
-			m.Action = Out[1]
+		str := fmt.Sprintf("%s", r)
+		trim := strings.TrimSpace(str)
+		Out := strings.Split(trim, "|")
+		switch {
+		// How many people logged in
+		case Out[0] == "PList" && Out[2] == "cnt":
+			m.EventType = "Current_User_Count"
+			m.Action = "Login_Count"
+			m.User = Out[2]
+			i, err := strconv.Atoi(Out[3])
+			if err != nil {
+				fmt.Printf("Error: %v\n", err.Error())
+			}
+			i--
+			loggedinCount := strconv.Itoa(i)
+			fmt.Printf("The number of people logged in is %v\n", loggedinCount)
+			m.State = loggedinCount
+		// Who just logged in
+		case Out[0] == "PList" && !(Out[2] == "cnt"):
+			m.EventType = "User Login/Logout"
+			if Out[2] == "1" {
+				m.Action = "Login"
+				fmt.Printf("%v - Login\n", Out[2])
+			} else if Out[2] == "0" {
+				m.Action = "Logout"
+				fmt.Printf("%v - Logout\n", Out[2])
+			}
 			m.User = Out[2]
 			m.State = Out[3]
-		case "MediaStatus":
+			// Started or stopped media
+		case Out[0] == "MediaStatus":
 			m.EventType = Out[0]
-			m.Action = Out[1]
+			if Out[2] == "1" {
+				m.Action = "Media Started"
+				fmt.Printf("Media Started\n")
+			} else if Out[2] == "0" {
+				m.Action = "Media Stopped"
+				fmt.Printf("Media Stopped\n")
+			}
 			m.User = ""
 			m.State = Out[2]
-		case "DisplayStatus":
-			m.EventType = Out[0]
-			m.Action = Out[1]
+		// Started or Stopped Presenting
+		case Out[0] == "DisplayStatus":
+			m.EventType = "Presenting"
+			if Out[3] == "1" {
+				m.Action = "Presentation Started"
+				fmt.Printf("%v - Presentation Started\n", Out[2])
+			} else if Out[3] == "0" {
+				m.Action = "Presentation Stopped"
+				fmt.Printf("%v - Presentation Stopped\n", Out[2])
+			}
 			m.User = Out[2]
 			m.State = Out[3]
+		// Stop our friend ping from sending on because we don't like ping, He's not really our friend
+		default:
+			continue
 		}
 		event.Timestamp = time.Now().Format(time.RFC3339)
 		event.Event.EventInfoKey = m.EventType
