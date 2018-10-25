@@ -14,7 +14,7 @@ func IsConnected(address string) bool {
 
 	log.Printf("Getting connected status of %s", address)
 
-	var command ViaCommand
+	var command Command
 	resp, err := SendCommand(command, address)
 	if err == nil && strings.Contains(resp, "Successful") {
 		connected = true
@@ -29,7 +29,7 @@ func GetVolume(address string) (int, error) {
 	defer color.Unset()
 	color.Set(color.FgYellow)
 
-	var command ViaCommand
+	var command Command
 	command.Command = "Vol"
 	command.Param1 = "Get"
 
