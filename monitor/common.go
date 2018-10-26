@@ -51,6 +51,7 @@ func init() {
 	room = split[1]
 }
 
+// Setting struct for messages
 type message struct {
 	EventType string
 	Action    string
