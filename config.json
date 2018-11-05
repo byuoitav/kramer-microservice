@@ -1,0 +1,8 @@
+{
+    "name": "kramer-microservice",
+    "port": ":8014",
+    "env-vars": [
+        "BYPASS_AUTH",
+        "ROOM_SYSTEM"
+    ]
+}

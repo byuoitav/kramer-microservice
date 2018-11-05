@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
@@ -19,7 +20,7 @@ func main() {
 	go videoswitcher.StartRouter()
 
 	port := ":8014"
-	router := echo.New()
+	router := common.NewRouter()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
 
