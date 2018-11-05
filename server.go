@@ -28,7 +28,13 @@ var name string
 var deviceList []structs.Device
 
 func init() {
-	name = os.Getenv("PI_HOSTNAME")
+
+	if len(os.Getenv("ROOM_SYSTEM")) == 0 {
+		log.L.Debugf("System is not tied to a specific room. Will not start via monitoring")
+		return
+	}
+
+	name = os.Getenv("SYSTEM_ID")
 	var err error
 	fmt.Printf("Gathering information for %s from database\n", name)
 
@@ -41,6 +47,7 @@ func init() {
 		// Pull room information from db
 		state, err := db.GetDB().GetStatus()
 		log.L.Debugf("%v\n", state)
+		//+deploy not_requried
 		if (err != nil || state != "completed") && !(len(os.Getenv("DEV_ROUTER")) > 0 || len(os.Getenv("STOP_REPLICATION")) > 0) {
 			log.L.Debugf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
 			time.Sleep(5 * time.Second)
@@ -88,7 +95,7 @@ func main() {
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	//start the VIA monitoring connection if the Controller is CP1
-	if strings.Contains(name, "-CP1") {
+	if strings.Contains(name, "-CP1") && len(os.Getenv("ROOM_SYSTEM")) > 0 {
 		for _, device := range deviceList {
 			go monitor.StartMonitoring(device)
 		}

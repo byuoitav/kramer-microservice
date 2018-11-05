@@ -38,10 +38,14 @@ var (
 
 func init() {
 	var err error
+	if len(os.Getenv("ROOM_SYSTEM")) == 0 {
+		return
 
-	pihost = os.Getenv("PI_HOSTNAME")
+	}
+
+	pihost = os.Getenv("SYSTEM_ID")
 	if len(pihost) == 0 {
-		log.L.Fatalf("PI_HOSTNAME not set.")
+		log.L.Fatalf("SYSTEM_ID not set.")
 	}
 
 	hostname, err = os.Hostname()
