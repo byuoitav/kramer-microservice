@@ -2,16 +2,25 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+
 	"net/http"
 	"strconv"
 
+	"github.com/byuoitav/common/log"
+	"github.com/byuoitav/common/v2/auth"
 	vs "github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
 
 func SwitchInput(context echo.Context) error {
+	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+		if err != nil {
+			log.L.Warnf("Problem getting auth: %v", err.Error())
+		}
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+
 	defer color.Unset()
 
 	input := context.Param("input")
@@ -34,18 +43,18 @@ func SwitchInput(context echo.Context) error {
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Routing %v to %v on %v", input, output, address)
-	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
+	log.L.Debugf("Routing %v to %v on %v", input, output, address)
+	log.L.Debugf("Changing to 1-based indexing... (+1 to each port number)")
 
 	ret, err := vs.SwitchInput(address, i, o, readWelcome)
 	if err != nil {
 		color.Set(color.FgRed)
-		log.Printf("There was a problem: %v", err.Error())
+		log.L.Debugf("There was a problem: %v", err.Error())
 		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Changing to 0-based indexing... (-1 to each port number)")
+	log.L.Debugf("Changing to 0-based indexing... (-1 to each port number)")
 	ret.Input, err = vs.ToIndexZero(ret.Input)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
@@ -54,11 +63,18 @@ func SwitchInput(context echo.Context) error {
 	ret.Input = fmt.Sprintf("%v:%v", ret.Input, output)
 
 	color.Set(color.FgGreen, color.Bold)
-	log.Printf("Success")
+	log.L.Debugf("Success")
 	return context.JSON(http.StatusOK, ret)
 }
 
 func GetInputByPort(context echo.Context) error {
+	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+		if err != nil {
+			log.L.Warnf("Problem getting auth: %v", err.Error())
+		}
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+
 	defer color.Unset()
 
 	address := context.Param("address")
@@ -74,8 +90,8 @@ func GetInputByPort(context echo.Context) error {
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Getting input for output port %s", port)
-	log.Printf("Changing to 1-based indexing... (+1 to each port number)")
+	log.L.Debugf("Getting input for output port %s", port)
+	log.L.Debugf("Changing to 1-based indexing... (+1 to each port number)")
 
 	input, err := vs.GetCurrentInputByOutputPort(address, p, readWelcome)
 	if err != nil {
@@ -83,7 +99,7 @@ func GetInputByPort(context echo.Context) error {
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Changing to 0-based indexing... (-1 to each port number)")
+	log.L.Debugf("Changing to 0-based indexing... (-1 to each port number)")
 	input.Input, err = vs.ToIndexZero(input.Input)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
@@ -91,11 +107,18 @@ func GetInputByPort(context echo.Context) error {
 
 	input.Input = fmt.Sprintf("%v:%v", input.Input, port)
 	color.Set(color.FgGreen, color.Bold)
-	log.Printf("Input for output port %s is %v", port, input.Input)
+	log.L.Debugf("Input for output port %s is %v", port, input.Input)
 	return context.JSON(http.StatusOK, input)
 }
 
 func SetFrontLock(context echo.Context) error {
+	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+		if err != nil {
+			log.L.Warnf("Problem getting auth: %v", err.Error())
+		}
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+
 	defer color.Unset()
 	address := context.Param("address")
 	state, err := strconv.ParseBool(context.Param("bool2"))
@@ -108,7 +131,7 @@ func SetFrontLock(context echo.Context) error {
 	}
 
 	color.Set(color.FgYellow)
-	log.Printf("Setting front button lock status to %v", state)
+	log.L.Debugf("Setting front button lock status to %v", state)
 
 	err = vs.SetFrontLock(address, state, readWelcome)
 	if err != nil {
@@ -116,6 +139,6 @@ func SetFrontLock(context echo.Context) error {
 	}
 
 	color.Set(color.FgGreen, color.Bold)
-	log.Printf("Success")
+	log.L.Debugf("Success")
 	return context.JSON(http.StatusOK, "Success")
 }
