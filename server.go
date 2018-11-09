@@ -3,21 +3,20 @@ package main
 import (
 	//"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common"
 	"github.com/byuoitav/common/db"
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
 	"github.com/byuoitav/kramer-microservice/monitor"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
-	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
 
@@ -27,7 +26,13 @@ var name string
 var deviceList []structs.Device
 
 func init() {
-	name = os.Getenv("PI_HOSTNAME")
+
+	if len(os.Getenv("ROOM_SYSTEM")) == 0 {
+		log.L.Debugf("System is not tied to a specific room. Will not start via monitoring")
+		return
+	}
+
+	name = os.Getenv("SYSTEM_ID")
 	var err error
 	fmt.Printf("Gathering information for %s from database\n", name)
 
@@ -39,17 +44,18 @@ func init() {
 	for {
 		// Pull room information from db
 		state, err := db.GetDB().GetStatus()
-		log.Printf("%v\n", state)
+		log.L.Debugf("%v\n", state)
+		//+deploy not_requried
 		if (err != nil || state != "completed") && !(len(os.Getenv("DEV_ROUTER")) > 0 || len(os.Getenv("STOP_REPLICATION")) > 0) {
-			log.Printf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
+			log.L.Debugf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		log.Printf(color.GreenString("Database replication state: %v", state))
+		log.L.Debugf(color.GreenString("Database replication state: %v", state))
 
 		devices, err := db.GetDB().GetDevicesByRoomAndRole(room, "EventRouter")
 		if err != nil {
-			log.Printf(color.RedString("Connecting to the Configuration DB failed, retrying in 5 seconds."))
+			log.L.Debugf(color.RedString("Connecting to the Configuration DB failed, retrying in 5 seconds."))
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -59,13 +65,13 @@ func init() {
 			//we're good, keep going
 			state, err := db.GetDB().GetStatus()
 			if (err != nil || state != "completed") && !(len(os.Getenv("STOP_REPLICATION")) > 0) {
-				log.Printf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
+				log.L.Debugf(color.RedString("Database replication in state %v. Retrying in 5 seconds.", state))
 				time.Sleep(5 * time.Second)
 				continue
 			}
 		}
+		log.L.Debugf(color.BlueString("Connection to the Configuration DB established."))
 		break
-		log.Printf(color.BlueString("Connection to the Configuration DB established."))
 	}
 	deviceList, err = db.GetDB().GetDevicesByRoomAndType(room, "via-connect-pro")
 	if err != nil {
@@ -79,38 +85,38 @@ func main() {
 	go videoswitcher.StartRouter()
 
 	port := ":8014"
-	router := echo.New()
+	router := common.NewRouter()
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
 
 	// Use the `secure` routing group to require authentication
-	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
+	//secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	//start the VIA monitoring connection if the Controller is CP1
-	if strings.Contains(name, "-CP1") {
+	if strings.Contains(name, "-CP1") && len(os.Getenv("ROOM_SYSTEM")) > 0 {
 		for _, device := range deviceList {
 			go monitor.StartMonitoring(device)
 		}
 	}
 
 	// videoswitcher endpoints
-	secure.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
-	secure.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
-	secure.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
+	router.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
+	router.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
+	router.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
 
-	secure.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
-	secure.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
+	router.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
+	router.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
 
 	// via functionality endpoints
-	secure.GET("/via/:address/reset", handlers.ResetVia)
-	secure.GET("/via/:address/reboot", handlers.RebootVia)
+	router.GET("/via/:address/reset", handlers.ResetVia)
+	router.GET("/via/:address/reboot", handlers.RebootVia)
 
 	// Set the volume
-	secure.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
+	router.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
 
 	// via informational endpoints
-	secure.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
-	secure.GET("/via/:address/volume/level", handlers.GetViaVolume)
+	router.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
+	router.GET("/via/:address/volume/level", handlers.GetViaVolume)
 
 	server := http.Server{
 		Addr:           port,

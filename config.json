@@ -1,0 +1,19 @@
+{
+    "name": "kramer-microservice",
+    "port": ":8014",
+    "env-vars": [
+        "BYPASS_AUTH",
+        "DB_ADDRESS",
+        "DB_PASSWORD",
+        "DB_USERNAME",
+        "ENDPOINT_ACCESS_KEY",
+        "ENDPOINT_AUTHORIZATION_URL",
+        "ENDPOINT_USERNAME",
+        "HUB_ADDRESS",
+        "ROOM_SYSTEM",
+        "STOP_REPLICATION",
+        "SYSTEM_ID",
+        "VIA_PASSWORD",
+        "VIA_USERNAME"
+    ]
+}
