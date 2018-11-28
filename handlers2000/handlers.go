@@ -8,19 +8,18 @@ import (
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/status"
-	"github.com/byuoitav/common/v2/auth"
 	"github.com/byuoitav/kramer-microservice/p2000"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
 
 func GetInputByPort(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	port := context.Param("port")
 	address := context.Param("address")
@@ -40,12 +39,12 @@ func GetInputByPort(context echo.Context) error {
 }
 
 func SwitchInput(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	input := context.Param("input")
 	output := context.Param("output")

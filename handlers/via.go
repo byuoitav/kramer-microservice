@@ -6,19 +6,18 @@ import (
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/status"
-	"github.com/byuoitav/common/v2/auth"
 	"github.com/byuoitav/kramer-microservice/via"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
 
 func ResetVia(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 	address := context.Param("address")
@@ -37,12 +36,12 @@ func ResetVia(context echo.Context) error {
 }
 
 func RebootVia(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 	address := context.Param("address")
@@ -61,12 +60,12 @@ func RebootVia(context echo.Context) error {
 }
 
 func SetViaVolume(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 	address := context.Param("address")
@@ -96,12 +95,12 @@ func SetViaVolume(context echo.Context) error {
 }
 
 func GetViaConnectedStatus(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	address := context.Param("address")
 
@@ -119,12 +118,13 @@ func GetViaConnectedStatus(context echo.Context) error {
 }
 
 func GetViaVolume(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
+
 	address := context.Param("address")
 
 	ViaVolume, err := via.GetVolume(address)

@@ -3,8 +3,9 @@ package via
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
+
+	"github.com/byuoitav/common/log"
 
 	"github.com/fatih/color"
 )
@@ -19,7 +20,7 @@ func Reboot(address string) error {
 	var command Command
 	command.Command = REBOOT
 
-	log.Printf("Sending command %s to %s", REBOOT, address)
+	log.L.Infof("Sending command %s to %s", REBOOT, address)
 
 	_, err := SendCommand(command, address)
 	if err != nil {
@@ -36,7 +37,7 @@ func Reset(address string) error {
 	var command Command
 	command.Command = RESET
 
-	log.Printf("Sending command %s to %s", RESET, address)
+	log.L.Infof("Sending command %s to %s", RESET, address)
 
 	resp, err := SendCommand(command, address)
 	if err != nil {
@@ -59,7 +60,7 @@ func SetVolume(address string, volumec string) (string, error) {
 	command.Param1 = "Set"
 	command.Param2 = volumec
 
-	log.Printf("Sending volume set command to %s", address)
+	log.L.Infof("Sending volume set command to %s", address)
 
 	resp, err := SendCommand(command, address)
 	if err != nil {

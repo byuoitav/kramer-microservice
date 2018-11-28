@@ -7,19 +7,18 @@ import (
 	"strconv"
 
 	"github.com/byuoitav/common/log"
-	"github.com/byuoitav/common/v2/auth"
 	vs "github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
 
 func SwitchInput(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 
@@ -68,12 +67,12 @@ func SwitchInput(context echo.Context) error {
 }
 
 func GetInputByPort(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 
@@ -112,12 +111,12 @@ func GetInputByPort(context echo.Context) error {
 }
 
 func SetFrontLock(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 	address := context.Param("address")
