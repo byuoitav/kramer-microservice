@@ -10,6 +10,13 @@ import (
 	"github.com/fatih/color"
 )
 
+// User status constants
+const (
+	Inactive = "0"
+	Active   = "1"
+	Waiting  = "2"
+)
+
 // IsConnected checks the status of the VIA connection
 func IsConnected(address string) bool {
 	defer color.Unset()
@@ -63,7 +70,7 @@ func GetHardwareInfo(address string) (structs.HardwareInfo, *nerr.E) {
 		return toReturn, nerr.Translate(err).Addf("failed to get serial number from %s", address)
 	}
 
-	toReturn.SerialNumber = parseResponse(serial)
+	toReturn.SerialNumber = parseResponse(serial, "|")
 
 	// get firmware version
 	command.Command = "GetVersion"
@@ -73,7 +80,7 @@ func GetHardwareInfo(address string) (structs.HardwareInfo, *nerr.E) {
 		return toReturn, nerr.Translate(err).Addf("failed to get the firmware version of %s", address)
 	}
 
-	toReturn.FirmwareVersion = parseResponse(version)
+	toReturn.FirmwareVersion = parseResponse(version, "|")
 
 	// get MAC address
 	command.Command = "GetMacAdd"
@@ -94,14 +101,14 @@ func GetHardwareInfo(address string) (structs.HardwareInfo, *nerr.E) {
 	hostname, network := parseIPInfo(ipInfo)
 
 	toReturn.Hostname = hostname
-	network.MACAddress = parseResponse(macAddr)
+	network.MACAddress = parseResponse(macAddr, "|")
 	toReturn.NetworkInfo = network
 
 	return toReturn, nil
 }
 
-func parseResponse(resp string) string {
-	pieces := strings.Split(resp, "|")
+func parseResponse(resp string, delimiter string) string {
+	pieces := strings.Split(resp, delimiter)
 
 	var msg string
 
@@ -133,4 +140,61 @@ func parseIPInfo(ip string) (hostname string, network structs.NetworkInfo) {
 	}
 
 	return hostname, network
+}
+
+// GetStatusOfUsers returns the status of users that are logged in to the VIA
+func GetStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
+	var toReturn structs.VIAUsers
+	toReturn.InactiveUsers = []string{}
+	toReturn.ActiveUsers = []string{}
+	toReturn.UsersWaiting = []string{}
+
+	defer color.Unset()
+	color.Set(color.FgYellow)
+
+	var command Command
+	command.Command = "PList"
+	command.Param1 = "all"
+	command.Param2 = "4"
+
+	log.L.Infof("Sendind command to get VIA users info to %s", address)
+
+	response, err := SendCommand(command, address)
+	if err != nil {
+		return toReturn, nerr.Translate(err).Addf("failed to get user information from %s", address)
+	}
+
+	fullList := strings.Split(response, "|")
+
+	userList := strings.Split(fullList[3], "#")
+
+	for _, user := range userList {
+		log.L.Info(user)
+		if len(user) == 0 {
+			continue
+		}
+
+		userSplit := strings.Split(user, "_")
+
+		if len(userSplit) < 2 {
+			continue
+		}
+
+		nickname := userSplit[0]
+		state := userSplit[1]
+
+		switch state {
+		case Inactive:
+			toReturn.InactiveUsers = append(toReturn.InactiveUsers, nickname)
+			break
+		case Active:
+			toReturn.ActiveUsers = append(toReturn.ActiveUsers, nickname)
+			break
+		case Waiting:
+			toReturn.UsersWaiting = append(toReturn.UsersWaiting, nickname)
+			break
+		}
+	}
+
+	return toReturn, nil
 }

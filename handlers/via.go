@@ -140,3 +140,15 @@ func GetViaVolume(context echo.Context) error {
 	}
 
 }
+
+// GetStatusOfUsers returns the status of users that are logged in to the VIA
+func GetStatusOfUsers(context echo.Context) error {
+	users, err := via.GetStatusOfUsers(context.Param("address"))
+	if err != nil {
+		color.Set(color.FgRed)
+		log.L.Errorf("Failed to retrieve VIA users : %s", err.Error())
+		return context.JSON(http.StatusInternalServerError, err)
+	}
+
+	return context.JSON(http.StatusOK, users)
+}

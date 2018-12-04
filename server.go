@@ -116,6 +116,7 @@ func main() {
 	read.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 	read.GET("/via/:address/volume/level", handlers.GetViaVolume)
 	read.GET("/via/:address/hardware", handlers.GetViaHardwareInfo)
+	read.GET("/via/:address/users/status", handlers.GetStatusOfUsers)
 
 	server := http.Server{
 		Addr:           port,
@@ -186,4 +187,16 @@ func printHeader() {
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet volume level on a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/hardware\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet the hardware information of a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/users/status\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet the status of users logged into a VIA device\n")
 }
