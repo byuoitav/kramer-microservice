@@ -142,8 +142,24 @@ func parseIPInfo(ip string) (hostname string, network structs.NetworkInfo) {
 	return hostname, network
 }
 
-// GetStatusOfUsers returns the status of users that are logged in to the VIA
-func GetStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
+// GetActiveSignal determines the active signal of the VIA by getting the user count
+func GetActiveSignal(address string) (structs.ActiveSignal, *nerr.E) {
+	signal := structs.ActiveSignal{Active: false}
+
+	users, err := getStatusOfUsers(address)
+	if err != nil {
+		return signal, err.Add("failed to get the status of users")
+	}
+
+	if len(users.ActiveUsers) > 0 {
+		signal.Active = true
+	}
+
+	return signal, nil
+}
+
+// getStatusOfUsers returns the status of users that are logged in to the VIA
+func getStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
 	var toReturn structs.VIAUsers
 	toReturn.InactiveUsers = []string{}
 	toReturn.ActiveUsers = []string{}
@@ -169,7 +185,6 @@ func GetStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
 	userList := strings.Split(fullList[3], "#")
 
 	for _, user := range userList {
-		log.L.Info(user)
 		if len(user) == 0 {
 			continue
 		}

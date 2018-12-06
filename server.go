@@ -117,7 +117,7 @@ func main() {
 	read.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 	read.GET("/via/:address/volume/level", handlers.GetViaVolume)
 	read.GET("/via/:address/hardware", handlers.GetViaHardwareInfo)
-	read.GET("/via/:address/users/status", handlers.GetStatusOfUsers)
+	read.GET("/via/:address/active", handlers.GetActiveSignal)
 
 	server := http.Server{
 		Addr:           port,
