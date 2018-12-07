@@ -141,3 +141,22 @@ func SetFrontLock(context echo.Context) error {
 	log.L.Debugf("Success")
 	return context.JSON(http.StatusOK, "Success")
 }
+
+// GetActiveSignal checks for active signal on a videoswitcher port
+func GetActiveSignal(context echo.Context) error {
+	address := context.Param("address")
+	port := context.Param("port")
+	rW := true
+
+	i, err := vs.ToIndexOne(port)
+	if err != nil || vs.LessThanZero(port) {
+		return context.JSON(http.StatusBadRequest, fmt.Sprintf("Error! Input parameter %s is not valid!", port))
+	}
+
+	signal, ne := vs.GetActiveSignalByPort(address, i, rW)
+	if ne != nil {
+		return context.JSON(http.StatusInternalServerError, err)
+	}
+
+	return context.JSON(http.StatusOK, signal)
+}

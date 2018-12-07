@@ -141,8 +141,8 @@ func GetViaVolume(context echo.Context) error {
 
 }
 
-// GetActiveSignal returns the status of users that are logged in to the VIA
-func GetActiveSignal(context echo.Context) error {
+// GetViaActiveSignal returns the status of users that are logged in to the VIA
+func GetViaActiveSignal(context echo.Context) error {
 	signal, err := via.GetActiveSignal(context.Param("address"))
 	if err != nil {
 		color.Set(color.FgRed)

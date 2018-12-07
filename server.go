@@ -102,6 +102,7 @@ func main() {
 	read.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
 	read.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
 	read.GET("/:address/welcome/:bool/hardware", handlers.GetSwitcherHardwareInfo)
+	read.GET("/:address/active/:port", handlers.GetActiveSignal)
 
 	write.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
 	read.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
@@ -117,7 +118,7 @@ func main() {
 	read.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
 	read.GET("/via/:address/volume/level", handlers.GetViaVolume)
 	read.GET("/via/:address/hardware", handlers.GetViaHardwareInfo)
-	read.GET("/via/:address/active", handlers.GetActiveSignal)
+	read.GET("/via/:address/active", handlers.GetViaActiveSignal)
 
 	server := http.Server{
 		Addr:           port,

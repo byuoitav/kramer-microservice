@@ -3,8 +3,10 @@ package videoswitcher
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 
@@ -24,6 +26,7 @@ const (
 	Gateway         = "NET-GATE"
 	MACAddress      = "NET-MAC"
 	NetDNS          = "NET-DNS"
+	Signal          = "SIGNAL"
 )
 
 // GetCurrentInputByOutputPort gets the current input that is set to the given output port
@@ -169,8 +172,8 @@ func hardwareCommand(commandType, param, address string, readWelcome bool) (stri
 	var command string
 
 	if len(param) > 0 {
-		// num, _ := strconv.Atoi(param)
-		command = fmt.Sprintf("#%s? %s", commandType, param)
+		num, _ := strconv.Atoi(param)
+		command = fmt.Sprintf("#%s? %d", commandType, num)
 	} else {
 		command = fmt.Sprintf("#%s?", commandType)
 	}
@@ -196,4 +199,25 @@ func hardwareCommand(commandType, param, address string, readWelcome bool) (stri
 	resp = strings.TrimSpace(resp)
 
 	return resp, nil
+}
+
+// GetActiveSignalByPort checks if the signal on a given port is active or not
+func GetActiveSignalByPort(address, port string, readWelcome bool) (structs.ActiveSignal, *nerr.E) {
+	var signal structs.ActiveSignal
+
+	signal.Active = false
+
+	signalResponse, err := hardwareCommand(Signal, port, address, readWelcome)
+	if err != nil {
+		log.L.Error(err.Error())
+		return signal, nerr.Translate(err).Addf("failed to get the signal for %s on %s", port, address)
+	}
+
+	signalStatus := strings.Split(signalResponse, ",")[1]
+
+	if signalStatus == "1" {
+		signal.Active = true
+	}
+
+	return signal, nil
 }
