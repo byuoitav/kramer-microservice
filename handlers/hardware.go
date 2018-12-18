@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/kramer-microservice/via"
@@ -23,7 +22,7 @@ func GetViaHardwareInfo(context echo.Context) error {
 
 // GetSwitcherHardwareInfo gets the hardware information for a Kramer video switcher
 func GetSwitcherHardwareInfo(context echo.Context) error {
-	readWelcome, _ := strconv.ParseBool(context.Param("bool"))
+	readWelcome := true
 
 	hardware, err := videoswitcher.GetHardwareInformation(context.Param("address"), readWelcome)
 	if err != nil {
