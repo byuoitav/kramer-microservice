@@ -17,7 +17,7 @@ func QueryPresentationNumber(baseEvent events.Event, f func(events.Event)) {
 		log.L.Errorf("Couldn't get presenter count: %v", err.Error())
 	}
 
-	baseEvent.Key = "PresneterCount"
+	baseEvent.Key = "presenter-count"
 	baseEvent.Value = strconv.Itoa(c)
 	baseEvent.Timestamp = time.Now()
 
