@@ -1,14 +1,13 @@
 package via
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/xml"
 	"fmt"
 	"net"
 	"os"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/byuoitav/common/log"
 
@@ -54,10 +53,11 @@ func SendCommand(command Command, addr string) (string, error) {
 		command.writeCommand(conn)
 	}
 
-	// get response
-	resp, err := readUntil('\n', conn, 5)
+	reader := bufio.NewReader(conn)
+	resp, err := reader.ReadBytes('\n')
 	if err != nil {
-		log.L.Infof(color.HiRedString("Error with reading the connection: %v", err.Error()))
+		err = fmt.Errorf("error reading from system: %s", err.Error())
+		log.L.Error(err.Error())
 		return "", err
 	}
 
@@ -94,8 +94,11 @@ func (c *Command) writeCommand(conn *net.TCPConn) error {
 	defer color.Unset()
 
 	// read welcome message
-	_, err := readUntil('\n', conn, 3)
+	reader := bufio.NewReader(conn)
+	_, err := reader.ReadBytes('\n')
 	if err != nil {
+		err = fmt.Errorf("error reading from system: %s", err.Error())
+		log.L.Error(err.Error())
 		return err
 	}
 
@@ -139,37 +142,6 @@ func getConnection(address string) (*net.TCPConn, error) {
 	}
 
 	return conn, nil
-}
-
-func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte, error) {
-	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
-
-	buffer := make([]byte, 128)
-	message := []byte{}
-
-	for !charInBuffer(delimeter, buffer) {
-		_, err := conn.Read(buffer)
-		if err != nil {
-			err = fmt.Errorf("Error reading response: %s", err.Error())
-			color.Set(color.FgRed)
-			log.L.Infof("%s", err.Error())
-			color.Unset()
-			return message, err
-		}
-
-		message = append(message, buffer...)
-	}
-	return bytes.Trim(message, "\x00"), nil
-}
-
-func charInBuffer(toCheck byte, buffer []byte) bool {
-	for _, b := range buffer {
-		if toCheck == b {
-			return true
-		}
-	}
-
-	return false
 }
 
 // PersistConnection builds persistent connection with VIA

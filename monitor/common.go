@@ -131,8 +131,8 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 		switch {
 		// How many people logged in
 		case Out[0] == "PList" && Out[2] == "cnt":
-			m.EventType = "Current_User_Count"
-			m.Action = "Login_Count"
+			m.EventType = "current-user-count"
+			m.Action = "login-count"
 			m.User = Out[2]
 			i, err := strconv.Atoi(Out[3])
 			if err != nil {
@@ -144,36 +144,36 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 			m.State = loggedinCount
 		// Who just logged in
 		case Out[0] == "PList" && !(Out[2] == "cnt"):
-			m.EventType = "User Login/Logout"
+			m.EventType = "user-login-logout"
 			if Out[2] == "1" {
-				m.Action = "Login"
+				m.Action = "login"
 				fmt.Printf("%v - Login\n", Out[2])
 			} else if Out[2] == "0" {
-				m.Action = "Logout"
+				m.Action = "logout"
 				fmt.Printf("%v - Logout\n", Out[2])
 			}
 			m.User = Out[2]
 			m.State = Out[3]
 			// Started or stopped media
-		case Out[0] == "MediaStatus":
+		case Out[0] == "media-status":
 			m.EventType = Out[0]
 			if Out[2] == "1" {
-				m.Action = "Media Started"
+				m.Action = "media-started"
 				fmt.Printf("Media Started\n")
 			} else if Out[2] == "0" {
-				m.Action = "Media Stopped"
+				m.Action = "media-stopped"
 				fmt.Printf("Media Stopped\n")
 			}
 			m.User = ""
 			m.State = Out[2]
 		// Started or Stopped Presenting
-		case Out[0] == "DisplayStatus":
-			m.EventType = "Presenting"
+		case Out[0] == "display-status":
+			m.EventType = "presenting"
 			if Out[3] == "1" {
-				m.Action = "Presentation Started"
+				m.Action = "presentation-started"
 				fmt.Printf("%v - Presentation Started\n", Out[2])
 			} else if Out[3] == "0" {
-				m.Action = "Presentation Stopped"
+				m.Action = "presentation-stopped"
 				fmt.Printf("%v - Presentation Stopped\n", Out[2])
 			}
 			m.User = Out[2]
