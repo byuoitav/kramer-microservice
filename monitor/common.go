@@ -157,7 +157,7 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 			m.User = Out[2]
 			m.State = m.Action
 			// Started or stopped media
-		case Out[0] == "media-status":
+		case Out[0] == "MediaStatus":
 			m.EventType = Out[0]
 			if Out[2] == "1" {
 				m.Action = "media-started"
@@ -169,7 +169,7 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 			m.User = ""
 			m.State = m.Action
 		// Started or Stopped Presenting
-		case Out[0] == "display-status":
+		case Out[0] == "DisplayStatus":
 			m.EventType = "presenting"
 			if Out[3] == "1" {
 				m.Action = "presentation-started"
