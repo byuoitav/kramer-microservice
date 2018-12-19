@@ -138,10 +138,12 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err.Error())
 			}
+
 			i--
 			loggedinCount := strconv.Itoa(i)
 			fmt.Printf("The number of people logged in is %v\n", loggedinCount)
 			m.State = loggedinCount
+
 		// Who just logged in
 		case Out[0] == "PList" && !(Out[2] == "cnt"):
 			m.EventType = "user-login-logout"
@@ -153,7 +155,7 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 				fmt.Printf("%v - Logout\n", Out[2])
 			}
 			m.User = Out[2]
-			m.State = Out[3]
+			m.State = m.Action
 			// Started or stopped media
 		case Out[0] == "media-status":
 			m.EventType = Out[0]
@@ -165,7 +167,7 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 				fmt.Printf("Media Stopped\n")
 			}
 			m.User = ""
-			m.State = Out[2]
+			m.State = m.Action
 		// Started or Stopped Presenting
 		case Out[0] == "display-status":
 			m.EventType = "presenting"
@@ -177,7 +179,7 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 				fmt.Printf("%v - Presentation Stopped\n", Out[2])
 			}
 			m.User = Out[2]
-			m.State = Out[3]
+			m.State = m.Action
 		// Stop our friend ping from sending on because we don't like ping, He's not really our friend
 		default:
 			continue
