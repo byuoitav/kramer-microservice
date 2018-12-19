@@ -180,6 +180,9 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 			}
 			m.User = Out[2]
 			m.State = m.Action
+
+			QueryPresentationNumber(event, messenger().SendEvent)
+
 		// Stop our friend ping from sending on because we don't like ping, He's not really our friend
 		default:
 			continue

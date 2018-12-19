@@ -1,6 +1,7 @@
 package via
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/byuoitav/common/log"
@@ -32,6 +33,37 @@ func IsConnected(address string) bool {
 	}
 
 	return connected
+}
+
+//GetPresenterCount .
+func GetPresenterCount(address string) (int, error) {
+	var command Command
+	command.Command = "PList"
+	command.Param1 = "all"
+	command.Param2 = "1"
+
+	log.L.Infof("Sending command to get VIA Presentation count to %s", address)
+	// Note: Volume Get command in VIA API doesn't have any error handling so it only returns Vol|Get|XX or nothing
+	// I am still checking for errors just in case something else fails during execution
+	resp, err := SendCommand(command, address)
+	if err != nil {
+		return 0, err
+	}
+
+	firstsplit := strings.Split(resp, "|")
+	//check to assert that first split is len 4
+	if len(firstsplit) != 4 {
+		return 0, fmt.Errorf("Unkown response %v", resp)
+	}
+
+	if strings.Contains(strings.ToLower(firstsplit[3]), "error14") {
+		return 0, nil
+	}
+
+	//otherwise we go through and split on #, then count the number of
+	secondSplit := strings.Split(firstsplit[3], "$")
+
+	return len(secondSplit), nil
 }
 
 // GetVolume for a VIA device
