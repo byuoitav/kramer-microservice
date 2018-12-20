@@ -178,12 +178,12 @@ func parseIPInfo(ip string) (hostname string, network structs.NetworkInfo) {
 func GetActiveSignal(address string) (structs.ActiveSignal, *nerr.E) {
 	signal := structs.ActiveSignal{Active: false}
 
-	users, err := getStatusOfUsers(address)
+	count, err := GetPresenterCount(address)
 	if err != nil {
-		return signal, err.Add("failed to get the status of users")
+		return signal, nerr.Translate(err).Add("failed to get the status of users")
 	}
 
-	if len(users.ActiveUsers) > 0 {
+	if count > 0 {
 		signal.Active = true
 	}
 
