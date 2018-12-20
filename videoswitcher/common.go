@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/byuoitav/common/log"
 
 	"github.com/fatih/color"
 )
@@ -44,13 +45,13 @@ func StartRouter() {
 		case command, ok := <-StartChannel:
 			if !ok {
 				color.Set(color.FgRed)
-				log.Printf("routing channel was closed")
+				log.L.Infof("routing channel was closed")
 				return
 			}
 
 			if channel, ok := connMap[command.Address]; ok {
 				color.Set(color.FgMagenta)
-				log.Printf("Using already open connection with %s", command.Address)
+				log.L.Infof("Using already open connection with %s", command.Address)
 				color.Unset()
 
 				channel <- command
@@ -64,7 +65,7 @@ func StartRouter() {
 			go startRoutine(newChannel, stopChannel, command.Address, command.ReadWelcome)
 		case addr := <-stopChannel:
 			color.Set(color.FgHiCyan)
-			log.Printf("Deleting %v from connection map", addr)
+			log.L.Infof("Deleting %v from connection map", addr)
 			color.Unset()
 
 			close(connMap[addr])
@@ -92,7 +93,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 		case command, ok := <-channel:
 			if !ok {
 				color.Set(color.FgHiCyan)
-				log.Printf("Closing connection with %v", address)
+				log.L.Infof("Closing connection with %v", address)
 				conn.Close()
 				return
 			}
@@ -104,7 +105,7 @@ func startRoutine(channel chan CommandInfo, stopChannel chan string, address str
 			delayTimer.Reset(150 * time.Millisecond)
 		case <-timer.C:
 			color.Set(color.FgHiCyan)
-			log.Printf("Connection with %v expired, sending close message", address)
+			log.L.Infof("Connection with %v expired, sending close message", address)
 			color.Unset()
 
 			//explicitly close it
@@ -124,14 +125,14 @@ func SendCommand(conn *net.TCPConn, address, command string) (resp string, err e
 	}
 
 	color.Set(color.FgBlue)
-	log.Printf("Response from device: %s", resp)
+	log.L.Infof("Response from device: %s", resp)
 	return resp, nil
 }
 
 func writeCommand(conn *net.TCPConn, command string) (string, error) {
 	command = strings.Replace(command, " ", string(SPACE), -1)
 	color.Set(color.FgMagenta)
-	log.Printf("Sending command %s", command)
+	log.L.Infof("Sending command %s", command)
 	color.Unset()
 	command += string(CARRIAGE_RETURN) + string(LINE_FEED)
 	conn.Write([]byte(command))
@@ -165,7 +166,7 @@ func LessThanZero(numString string) bool {
 	num, err := strconv.Atoi(numString)
 	if err != nil {
 		color.Set(color.FgRed)
-		log.Printf("Error converting %s to a number: %s", numString, err.Error())
+		log.L.Infof("Error converting %s to a number: %s", numString, err.Error())
 		return false
 	}
 
@@ -186,7 +187,7 @@ func ToIndexZero(numString string) (string, error) {
 
 func getConnection(address string, readWelcome bool) (*net.TCPConn, error) {
 	color.Set(color.FgMagenta)
-	log.Printf("Opening telnet connection with %s", address)
+	log.L.Infof("Opening telnet connection with %s", address)
 	color.Unset()
 
 	addr, err := net.ResolveTCPAddr("tcp", address+":5000")
@@ -201,7 +202,7 @@ func getConnection(address string, readWelcome bool) (*net.TCPConn, error) {
 
 	if readWelcome {
 		color.Set(color.FgMagenta)
-		log.Printf("Reading welcome message")
+		log.L.Infof("Reading welcome message")
 		color.Unset()
 		_, err := readUntil(CARRIAGE_RETURN, conn, 3)
 		if err != nil {
@@ -222,7 +223,7 @@ func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte,
 		_, err := conn.Read(buffer)
 		if err != nil {
 			err = errors.New(fmt.Sprintf("Error reading response: %s", err.Error()))
-			log.Printf("%s", err.Error())
+			log.L.Infof("%s", err.Error())
 			return message, err
 		}
 
@@ -268,6 +269,6 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 
 func logError(e string) {
 	color.Set(color.FgRed)
-	log.Printf("%s", e)
+	log.L.Infof("%s", e)
 	color.Unset()
 }

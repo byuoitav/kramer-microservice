@@ -12,12 +12,12 @@ import (
 	"github.com/byuoitav/common/db"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
+	"github.com/byuoitav/common/v2/auth"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
 	"github.com/byuoitav/kramer-microservice/monitor"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
-	"github.com/labstack/echo/middleware"
 )
 
 /* global variable declaration */
@@ -86,11 +86,9 @@ func main() {
 
 	port := ":8014"
 	router := common.NewRouter()
-	router.Pre(middleware.RemoveTrailingSlash())
-	router.Use(middleware.CORS())
 
-	// Use the `secure` routing group to require authentication
-	//secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
+	write := router.Group("", auth.AuthorizeRequest("write-state", "room", auth.LookupResourceFromAddress))
+	read := router.Group("", auth.AuthorizeRequest("read-state", "room", auth.LookupResourceFromAddress))
 
 	//start the VIA monitoring connection if the Controller is CP1
 	if strings.Contains(name, "-CP1") && len(os.Getenv("ROOM_SYSTEM")) > 0 {
@@ -100,23 +98,27 @@ func main() {
 	}
 
 	// videoswitcher endpoints
-	router.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
-	router.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
-	router.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
+	read.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
+	read.GET("/:address/welcome/:bool/front-lock/:bool2", handlers.SetFrontLock)
+	read.GET("/:address/welcome/:bool/input/get/:port", handlers.GetInputByPort)
+	read.GET("/:address/hardware", handlers.GetSwitcherHardwareInfo)
+	read.GET("/:address/active/:port", handlers.GetActiveSignal)
 
-	router.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
-	router.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
+	write.GET("/2000/:address/input/:input/:output", handlers2000.SwitchInput)
+	read.GET("/2000/:address/input/get/:port", handlers2000.GetInputByPort)
 
 	// via functionality endpoints
-	router.GET("/via/:address/reset", handlers.ResetVia)
-	router.GET("/via/:address/reboot", handlers.RebootVia)
+	write.GET("/via/:address/reset", handlers.ResetVia)
+	write.GET("/via/:address/reboot", handlers.RebootVia)
 
 	// Set the volume
-	router.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
+	write.GET("/via/:address/volume/set/:volvalue", handlers.SetViaVolume)
 
 	// via informational endpoints
-	router.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
-	router.GET("/via/:address/volume/level", handlers.GetViaVolume)
+	read.GET("/via/:address/connected", handlers.GetViaConnectedStatus)
+	read.GET("/via/:address/volume/level", handlers.GetViaVolume)
+	read.GET("/via/:address/hardware", handlers.GetViaHardwareInfo)
+	read.GET("/via/:address/active", handlers.GetViaActiveSignal)
 
 	server := http.Server{
 		Addr:           port,
@@ -187,4 +189,16 @@ func printHeader() {
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet volume level on a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/hardware\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet the hardware information of a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/users/status\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet the status of users logged into a VIA device\n")
 }

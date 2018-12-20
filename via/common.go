@@ -1,15 +1,15 @@
 package via
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/xml"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"regexp"
 	"strconv"
-	"time"
+
+	"github.com/byuoitav/common/log"
 
 	"github.com/fatih/color"
 )
@@ -38,7 +38,7 @@ func SendCommand(command Command, addr string) (string, error) {
 	color.Set(color.FgCyan)
 
 	// get the connection
-	log.Printf("Opening telnet connection with %s", addr)
+	log.L.Infof("Opening telnet connection with %s", addr)
 	conn, err := getConnection(addr)
 	if err != nil {
 		return "", err
@@ -53,16 +53,17 @@ func SendCommand(command Command, addr string) (string, error) {
 		command.writeCommand(conn)
 	}
 
-	// get response
-	resp, err := readUntil('\n', conn, 5)
+	reader := bufio.NewReader(conn)
+	resp, err := reader.ReadBytes('\n')
 	if err != nil {
-		log.Printf(color.HiRedString("Error with reading the connection: %v", err.Error()))
+		err = fmt.Errorf("error reading from system: %s", err.Error())
+		log.L.Error(err.Error())
 		return "", err
 	}
 
 	if len(string(resp)) > 0 {
 		color.Set(color.FgBlue)
-		log.Printf("Response from device: %s", resp)
+		log.L.Infof("Response from device: %s", resp)
 	}
 
 	return string(resp), nil
@@ -76,7 +77,7 @@ func login(conn *net.TCPConn) error {
 	cmd.Command = "Login"
 
 	color.Set(color.FgBlue)
-	log.Printf("Logging in...")
+	log.L.Infof("Logging in...")
 
 	err := cmd.writeCommand(conn)
 	if err != nil {
@@ -84,7 +85,7 @@ func login(conn *net.TCPConn) error {
 	}
 
 	color.Set(color.FgBlue)
-	log.Printf("Login successful")
+	log.L.Infof("Login successful")
 
 	return nil
 }
@@ -93,8 +94,11 @@ func (c *Command) writeCommand(conn *net.TCPConn) error {
 	defer color.Unset()
 
 	// read welcome message
-	_, err := readUntil('\n', conn, 3)
+	reader := bufio.NewReader(conn)
+	_, err := reader.ReadBytes('\n')
 	if err != nil {
+		err = fmt.Errorf("error reading from system: %s", err.Error())
+		log.L.Error(err.Error())
 		return err
 	}
 
@@ -105,7 +109,7 @@ func (c *Command) writeCommand(conn *net.TCPConn) error {
 
 	color.Set(color.FgMagenta)
 	if len(c.Password) == 0 {
-		log.Printf("Sending command: %s", b)
+		log.L.Infof("Sending command: %s", b)
 		color.Set(color.FgMagenta)
 	}
 
@@ -126,49 +130,18 @@ func getConnection(address string) (*net.TCPConn, error) {
 	radder, err := net.ResolveTCPAddr("tcp", address+":9982")
 	if err != nil {
 		err = fmt.Errorf("error resolving address : %s", err.Error())
-		log.Printf(err.Error())
+		log.L.Infof(err.Error())
 		return nil, err
 	}
 
 	conn, err := net.DialTCP("tcp", nil, radder)
 	if err != nil {
 		err = fmt.Errorf("error dialing address : %s", err.Error())
-		log.Printf(err.Error())
+		log.L.Infof(err.Error())
 		return nil, err
 	}
 
 	return conn, nil
-}
-
-func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte, error) {
-	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
-
-	buffer := make([]byte, 128)
-	message := []byte{}
-
-	for !charInBuffer(delimeter, buffer) {
-		_, err := conn.Read(buffer)
-		if err != nil {
-			err = fmt.Errorf("Error reading response: %s", err.Error())
-			color.Set(color.FgRed)
-			log.Printf("%s", err.Error())
-			color.Unset()
-			return message, err
-		}
-
-		message = append(message, buffer...)
-	}
-	return bytes.Trim(message, "\x00"), nil
-}
-
-func charInBuffer(toCheck byte, buffer []byte) bool {
-	for _, b := range buffer {
-		if toCheck == b {
-			return true
-		}
-	}
-
-	return false
 }
 
 // PersistConnection builds persistent connection with VIA
@@ -177,7 +150,7 @@ func PersistConnection(addr string) (*net.TCPConn, error) {
 	color.Set(color.FgCyan)
 
 	// get the connection
-	log.Printf("Opening persistent telnet connection for reading events from %s", addr)
+	log.L.Infof("Opening persistent telnet connection for reading events from %s", addr)
 	pconn, err := getConnection(addr)
 	if err != nil {
 		return nil, err
@@ -197,7 +170,7 @@ func VolumeParse(vollevel string) (int, error) {
 	if err != nil {
 		err = fmt.Errorf("Error converting response: %s", err.Error())
 		color.Set(color.FgRed)
-		log.Printf("%s", err.Error())
+		log.L.Infof("%s", err.Error())
 		color.Unset()
 		return 0, err
 	}

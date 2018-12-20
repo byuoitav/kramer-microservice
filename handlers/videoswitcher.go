@@ -7,19 +7,18 @@ import (
 	"strconv"
 
 	"github.com/byuoitav/common/log"
-	"github.com/byuoitav/common/v2/auth"
 	vs "github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 )
 
 func SwitchInput(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 
@@ -68,12 +67,12 @@ func SwitchInput(context echo.Context) error {
 }
 
 func GetInputByPort(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 
@@ -112,12 +111,12 @@ func GetInputByPort(context echo.Context) error {
 }
 
 func SetFrontLock(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
+	// if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
+	// 	if err != nil {
+	// 		log.L.Warnf("Problem getting auth: %v", err.Error())
+	// 	}
+	// 	return context.String(http.StatusUnauthorized, "unauthorized")
+	// }
 
 	defer color.Unset()
 	address := context.Param("address")
@@ -141,4 +140,23 @@ func SetFrontLock(context echo.Context) error {
 	color.Set(color.FgGreen, color.Bold)
 	log.L.Debugf("Success")
 	return context.JSON(http.StatusOK, "Success")
+}
+
+// GetActiveSignal checks for active signal on a videoswitcher port
+func GetActiveSignal(context echo.Context) error {
+	address := context.Param("address")
+	port := context.Param("port")
+	rW := true
+
+	i, err := vs.ToIndexOne(port)
+	if err != nil || vs.LessThanZero(port) {
+		return context.JSON(http.StatusBadRequest, fmt.Sprintf("Error! Input parameter %s is not valid!", port))
+	}
+
+	signal, ne := vs.GetActiveSignalByPort(address, i, rW)
+	if ne != nil {
+		return context.JSON(http.StatusInternalServerError, err)
+	}
+
+	return context.JSON(http.StatusOK, signal)
 }
