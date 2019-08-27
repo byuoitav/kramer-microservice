@@ -72,7 +72,7 @@ func pingTest(pconn *net.TCPConn) error {
 	var c via.Command
 	c.Username = "su"
 	c.Command = "IpInfo"
-	log.L.Info("Oh ho, Pongo, you old rascal!")
+	log.L.Info("Pong goes another ping!")
 	b, err := xml.Marshal(c)
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func readPump(device structs.Device, pconn *net.TCPConn, event events.Event) {
 			}
 			m.User = Out[2]
 			m.State = m.Action
-			// Started or stopped media
+		// Started or stopped media
 		case Out[0] == "MediaStatus":
 			m.EventType = Out[0]
 			if Out[2] == "1" {
