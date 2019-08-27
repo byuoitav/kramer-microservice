@@ -35,6 +35,29 @@ func IsConnected(address string) bool {
 	return connected
 }
 
+// Get the Room Code and return the current room code as a string
+func GetRoomCode(address string) (string, error) {
+	var command Command
+	command.Command = "RCode"
+	command.Param1 = "Get"
+	command.Param2 = "Code"
+
+	log.L.Infof("Sending command to get current room code to %s", address)
+	// Note: RCode Get command in VIA API doesn't have any error handling so it only returns RCode|Get|Code|XXXX or nothing
+	resp, err := SendCommand(command, address)
+	if err != nil {
+		return "", err
+	}
+	split := strings.Split(resp, "|")
+	if len(split) != 4 {
+		return "", fmt.Errorf("Unknown response %v", resp)
+	}
+
+	roomcode := strings.TrimSpace(split[3])
+
+	return roomcode, nil
+}
+
 //GetPresenterCount .
 func GetPresenterCount(address string) (int, error) {
 	var command Command
@@ -53,7 +76,7 @@ func GetPresenterCount(address string) (int, error) {
 	firstsplit := strings.Split(resp, "|")
 	//check to assert that first split is len 4
 	if len(firstsplit) != 4 {
-		return 0, fmt.Errorf("Unkown response %v", resp)
+		return 0, fmt.Errorf("Unknown response %v", resp)
 	}
 
 	if strings.Contains(strings.ToLower(firstsplit[3]), "error14") {
@@ -191,7 +214,7 @@ func GetActiveSignal(address string) (structs.ActiveSignal, *nerr.E) {
 }
 
 // getStatusOfUsers returns the status of users that are logged in to the VIA
-func getStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
+func GetStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
 	var toReturn structs.VIAUsers
 	toReturn.InactiveUsers = []string{}
 	toReturn.ActiveUsers = []string{}
@@ -205,7 +228,7 @@ func getStatusOfUsers(address string) (structs.VIAUsers, *nerr.E) {
 	command.Param1 = "all"
 	command.Param2 = "4"
 
-	log.L.Infof("Sendind command to get VIA users info to %s", address)
+	log.L.Infof("Sending command to get VIA users info to %s", address)
 
 	response, err := SendCommand(command, address)
 	if err != nil {
