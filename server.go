@@ -119,6 +119,8 @@ func main() {
 	read.GET("/via/:address/volume/level", handlers.GetViaVolume)
 	read.GET("/via/:address/hardware", handlers.GetViaHardwareInfo)
 	read.GET("/via/:address/active", handlers.GetViaActiveSignal)
+	read.GET("/via/:address/roomcode", handlers.GetViaRoomCode)
+	read.GET("/via/:address/users/status", handlers.GetConnectedUsers)
 
 	server := http.Server{
 		Addr:           port,
@@ -201,4 +203,17 @@ func printHeader() {
 
 	color.Set(color.FgHiCyan)
 	fmt.Printf("\t\tGet the status of users logged into a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/roomcode\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tGet the room code for a VIA device\n")
+
+	color.Set(color.FgBlue)
+	fmt.Printf("\t/via/:address/active\n")
+
+	color.Set(color.FgHiCyan)
+	fmt.Printf("\t\tShow if someone is currently presenting on the VIA\n")
+
 }
