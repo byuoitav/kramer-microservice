@@ -15,7 +15,6 @@ import (
 	"github.com/byuoitav/common/v2/auth"
 	"github.com/byuoitav/kramer-microservice/handlers"
 	"github.com/byuoitav/kramer-microservice/handlers2000"
-	"github.com/byuoitav/kramer-microservice/monitor"
 	"github.com/byuoitav/kramer-microservice/videoswitcher"
 	"github.com/fatih/color"
 )
@@ -91,11 +90,14 @@ func main() {
 	read := router.Group("", auth.AuthorizeRequest("read-state", "room", auth.LookupResourceFromAddress))
 
 	//start the VIA monitoring connection if the Controller is CP1
-	if strings.Contains(name, "-CP1") && len(os.Getenv("ROOM_SYSTEM")) > 0 {
-		for _, device := range deviceList {
-			go monitor.StartMonitoring(device)
+	// Moving feature set to a different service - VIA-Control Microservice
+	/*
+		if strings.Contains(name, "-CP1") && len(os.Getenv("ROOM_SYSTEM")) > 0 {
+			for _, device := range deviceList {
+				go monitor.StartMonitoring(device)
+			}
 		}
-	}
+	*/
 
 	// videoswitcher endpoints
 	read.GET("/:address/welcome/:bool/input/:input/:output", handlers.SwitchInput)
